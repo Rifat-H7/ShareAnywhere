@@ -85,6 +85,12 @@
         a:hover {
             text-decoration: underline;
         }
+
+    .upload-more-link {
+        display: inline-block;
+        margin-top: 2rem;
+        font-size: 1rem;
+    }
 </style>
 
 <div class="fluent-card">
@@ -97,4 +103,6 @@
     </div>
 
     <p>Download URL:<br /><a href="@ViewBag.DownloadLink">@ViewBag.DownloadLink</a></p>
+
+    <a class="upload-more-link" href="@Url.Action("Upload", "File")">Upload more</a>
 </div>
