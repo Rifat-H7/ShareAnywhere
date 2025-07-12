@@ -29,13 +29,14 @@ namespace ShareAnywhere.Controllers
             }
 
             var record = _fileService.SaveFile(uploadedFile, deleteAfterCount);
-            return RedirectToAction("UploadResult", new { code = record.Code });
+            return RedirectToAction("UploadResult", new { code = record.Code, filename = record.FileName });
         }
 
         [HttpGet]
-        public IActionResult UploadResult(string code)
+        public IActionResult UploadResult(string code, string filename)
         {
             ViewBag.Code = code;
+            ViewBag.FileName = filename; 
             ViewBag.DownloadLink = Url.Action("Download", new { code });
             return View();
         }
