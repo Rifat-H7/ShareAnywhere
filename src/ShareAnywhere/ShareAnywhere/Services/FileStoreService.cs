@@ -14,7 +14,7 @@ namespace ShareAnywhere.Services
             _env = env;
         }
 
-        public FileRecord SaveFile(IFormFile file)
+        public FileRecord SaveFile(IFormFile file, int deleteAfterCount = 1)
         {
             var uploadFolder = Path.Combine(_env.WebRootPath, "Uploads");
             Directory.CreateDirectory(uploadFolder);
@@ -32,7 +32,8 @@ namespace ShareAnywhere.Services
             {
                 Code = code,
                 FilePath = filePath,
-                FileName = file.FileName
+                FileName = file.FileName,
+                DeleteAfterCount = deleteAfterCount
             };
 
             _fileMap[code] = record;
@@ -41,8 +42,11 @@ namespace ShareAnywhere.Services
 
         public FileRecord? GetFile(string code)
         {
-            _fileMap.TryGetValue(code.ToUpper(), out var record);
-            return record;
+            if (_fileMap.TryGetValue(code.ToUpper(), out var record))
+            {
+                return record;
+            }
+            return null;
         }
         public void DeleteFile(string code)
         {

@@ -20,7 +20,7 @@ namespace ShareAnywhere.Controllers
         }
 
         [HttpPost]
-        public IActionResult Upload(IFormFile uploadedFile)
+        public IActionResult Upload(IFormFile uploadedFile, int deleteAfterCount = 1)
         {
             if (uploadedFile == null || uploadedFile.Length == 0)
             {
@@ -28,7 +28,7 @@ namespace ShareAnywhere.Controllers
                 return View();
             }
 
-            var record = _fileService.SaveFile(uploadedFile);
+            var record = _fileService.SaveFile(uploadedFile, deleteAfterCount);
             return RedirectToAction("UploadResult", new { code = record.Code });
         }
 
@@ -47,18 +47,15 @@ namespace ShareAnywhere.Controllers
             if (record == null) return NotFound("Invalid download code.");
 
             var fileBytes = System.IO.File.ReadAllBytes(record.FilePath);
-            _fileService.DeleteFile(code);
+
+            // Decrement and delete after sending the file
+            record.DeleteAfterCount--;
+            if (record.DeleteAfterCount <= 0)
+            {
+                _fileService.DeleteFile(code);
+            }
+
             return File(fileBytes, "application/octet-stream", record.FileName);
-        }
-
-        [HttpGet("AutoDownload/{code}")]
-        public IActionResult AutoDownload(string code)
-        {
-            var record = _fileService.GetFile(code);
-            if (record == null) return NotFound("Invalid code.");
-
-            ViewBag.FileUrl = Url.Action("Download", new { code });
-            return View("Download");
         }
     }
 }

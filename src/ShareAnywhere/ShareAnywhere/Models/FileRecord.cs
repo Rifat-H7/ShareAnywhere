@@ -5,5 +5,6 @@
         public string Code { get; set; }
         public string FilePath { get; set; }
         public string FileName { get; set; }
+        public int DeleteAfterCount { get; set; } = 1;
     }
 }
