@@ -16,6 +16,35 @@
         });
     }
 </script>
+<!-- Include QRCode.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+    function copyCode() {
+        const code = document.getElementById("codeText").innerText;
+        const rootUrl = window.location.origin;
+        const fullUrl = rootUrl + "/" + code;
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            const btn = document.getElementById("copyBtn");
+            btn.innerText = "Copied!";
+            setTimeout(() => btn.innerText = "Copy", 2000);
+        });
+    }
+
+    // Generate QR code after page load
+    window.onload = function () {
+        const code = document.getElementById("codeText").innerText;
+        const fullUrl = window.location.origin + "/" + code;
+        new QRCode(document.getElementById("qrcode"), {
+            text: fullUrl,
+            width: 180,
+            height: 180,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
+</script>
 
 <style>
     body {
@@ -105,7 +134,14 @@
         <button id="copyBtn" class="copy-btn" onclick="copyCode()">Copy</button>
     </div>
 
+
     <p>Download URL:<br /><a href="@ViewBag.DownloadLink">@ViewBag.DownloadLink</a></p>
 
+    <div style="margin-top: 2rem; text-align: center;">
+        <p>Or scan the QR code:</p>
+        <div id="qrcode" style="display: inline-block;"></div>
+    </div>
+
     <a class="upload-more-link" href="@Url.Action("Upload", "File")">Upload more</a>
+
 </div>
