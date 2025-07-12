@@ -1,0 +1,8 @@
+﻿@{
+    ViewData["Title"] = "Upload Complete";
+}
+
+<h2>File Uploaded!</h2>
+<p>Share this code: <strong>@ViewBag.Code</strong></p>
+<p>Download URL: <a href="@ViewBag.DownloadLink">@ViewBag.DownloadLink</a></p>
+<p>Auto-download URL: <a href="/AutoDownload/@ViewBag.Code">/AutoDownload/@ViewBag.Code</a></p>

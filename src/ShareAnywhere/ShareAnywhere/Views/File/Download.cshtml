@@ -1,0 +1,12 @@
+﻿@{
+    ViewData["Title"] = "Downloading...";
+}
+
+<html>
+<head>
+    <meta http-equiv="refresh" content="0; url='@ViewBag.FileUrl'" />
+</head>
+<body>
+    <p>Downloading your file... <a href="@ViewBag.FileUrl">Click here if not redirected</a>.</p>
+</body>
+</html>
