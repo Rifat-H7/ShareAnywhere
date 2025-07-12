@@ -1,9 +1,10 @@
 ﻿using ShareAnywhere.Models;
+using ShareAnywhere.Services.Interfaces;
 using System.Collections.Concurrent;
 
 namespace ShareAnywhere.Services
 {
-    public class FileStoreService
+    public class FileStoreService : IFileStoreService
     {
         private readonly IWebHostEnvironment _env;
         private readonly ConcurrentDictionary<string, FileRecord> _fileMap = new();

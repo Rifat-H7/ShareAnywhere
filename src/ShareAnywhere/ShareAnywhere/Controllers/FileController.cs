@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ShareAnywhere.Services;
+using ShareAnywhere.Services.Interfaces;
 
 namespace ShareAnywhere.Controllers
 {
     public class FileController : Controller
     {
-        private readonly FileStoreService _fileService;
+        private readonly IFileStoreService _fileService;
 
-        public FileController(FileStoreService fileService)
+        public FileController(IFileStoreService fileService)
         {
             _fileService = fileService;
         }
