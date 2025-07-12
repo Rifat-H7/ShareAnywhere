@@ -40,7 +40,7 @@ namespace ShareAnywhere.Controllers
             return View();
         }
 
-        [HttpGet("Download/{code}")]
+        [HttpGet("{code}")]
         public IActionResult Download(string code)
         {
             var record = _fileService.GetFile(code);
