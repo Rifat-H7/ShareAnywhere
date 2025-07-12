@@ -6,5 +6,6 @@ namespace ShareAnywhere.Services.Interfaces
     {
         FileRecord SaveFile(IFormFile file);
         FileRecord? GetFile(string code);
+        void DeleteFile(string code);
     }
 }

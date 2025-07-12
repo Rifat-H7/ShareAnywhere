@@ -44,6 +44,16 @@ namespace ShareAnywhere.Services
             _fileMap.TryGetValue(code.ToUpper(), out var record);
             return record;
         }
+        public void DeleteFile(string code)
+        {
+            if (_fileMap.TryRemove(code.ToUpper(), out var record))
+            {
+                if (File.Exists(record.FilePath))
+                {
+                    File.Delete(record.FilePath);
+                }
+            }
+        }
 
         private string GenerateCode()
         {

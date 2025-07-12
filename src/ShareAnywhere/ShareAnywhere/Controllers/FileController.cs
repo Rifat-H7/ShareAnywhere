@@ -47,6 +47,7 @@ namespace ShareAnywhere.Controllers
             if (record == null) return NotFound("Invalid download code.");
 
             var fileBytes = System.IO.File.ReadAllBytes(record.FilePath);
+            _fileService.DeleteFile(code);
             return File(fileBytes, "application/octet-stream", record.FileName);
         }
 
