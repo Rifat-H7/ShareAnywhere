@@ -1,116 +1,274 @@
-﻿@{
-    ViewData["Title"] = "Upload File";
-}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<style>
-    body {
-        background-color: #f3f4f6;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-    }
-
-    header {
-        background-color: #ffffff;
-        padding: 1rem 2rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        text-align: center;
-    }
-
-    footer {
-        background-color: #ffffff;
-        padding: 1rem;
-        text-align: center;
-        font-size: 0.9rem;
-        color: #666;
-        margin-top: auto;
-        border-top: 1px solid #e0e0e0;
-    }
-
-    .fluent-card {
-        background: #ffffff;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        padding: 2rem;
-        max-width: 500px;
-        margin: 2rem auto;
-        transition: transform 0.2s;
-    }
-
-        .fluent-card:hover {
-            transform: scale(1.01);
-        }
-
-    .form-label {
-        margin-top: 1rem;
-        font-weight: 600;
-        color: #333;
-    }
-
-    .form-control, .form-file-input {
-        border-radius: 10px;
-        border: 1px solid #ccc;
-        padding: 0.75rem;
-        font-size: 1rem;
-        transition: box-shadow 0.2s;
-    }
-
-        .form-control:focus, .form-file-input:focus {
-            box-shadow: 0 0 5px rgba(0, 120, 215, 0.4);
-            border-color: #0078d7;
-        }
-
-    .btn-fluent {
-        background-color: #0078d7;
-        color: white;
-        border-radius: 8px;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        margin-top: 1.5rem;
-        width: 100%;
-        transition: background-color 0.3s ease;
-    }
-
-        .btn-fluent:hover {
-            background-color: #005a9e;
-        }
-
-    h1 {
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        color: #2d2d2d;
-    }
-
-    .description {
-        font-size: 1rem;
-        color: #555;
-        margin-bottom: 1rem;
-    }
-</style>
+﻿<!DOCTYPE html>
+<html>
 <head>
     <title>Share Anywhere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #ffffff;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        footer {
+            background-color: #ffffff;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: auto;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .fluent-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            max-width: 500px;
+            margin: 2rem auto;
+            transition: transform 0.2s;
+        }
+
+            .fluent-card:hover {
+                transform: scale(1.01);
+            }
+
+        .form-label {
+            margin-top: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control, .form-file-input {
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            padding: 0.75rem;
+            font-size: 1rem;
+            transition: box-shadow 0.2s;
+        }
+
+            .form-control:focus, .form-file-input:focus {
+                box-shadow: 0 0 5px rgba(0, 120, 215, 0.4);
+                border-color: #0078d7;
+            }
+
+        .btn-fluent {
+            background-color: #0078d7;
+            color: white;
+            border-radius: 8px;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+            .btn-fluent:hover {
+                background-color: #005a9e;
+            }
+
+        h1 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #2d2d2d;
+        }
+
+        .description {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 1rem;
+        }
+
+        /* Drag and drop styles */
+        .drag-drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+            .drag-drop-area.dragover {
+                border-color: #0078d7;
+                background-color: #e6f3ff;
+                transform: scale(1.02);
+            }
+
+            .drag-drop-area:hover {
+                border-color: #0078d7;
+                background-color: #f0f8ff;
+            }
+
+        .drag-drop-text {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .drag-drop-subtext {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .file-selected {
+            background-color: #e6f3ff;
+            border-color: #0078d7;
+            color: #0078d7;
+        }
+
+        .file-info {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #0078d7;
+        }
+
+        .drag-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #ccc;
+        }
+
+        .drag-drop-area.dragover .drag-icon {
+            color: #0078d7;
+        }
+    </style>
 </head>
-<header>
-    <h1>Share Anywhere</h1>
-    <div class="description">Upload and download file with just 1 click</div>
-</header>
+<body>
+    <header>
+        <h1>Share Anywhere</h1>
+        <div class="description">Upload and download file with just 1 click</div>
+    </header>
 
-<div class="fluent-card">
-    <form method="post" enctype="multipart/form-data" asp-action="Upload">
-        <label class="form-label" for="uploadedFile">Choose file to upload</label>
-        <input class="form-control form-file-input" type="file" name="uploadedFile" id="uploadedFile" required />
+    <div class="fluent-card">
+        <form method="post" enctype="multipart/form-data" asp-action="Upload">
+            <label class="form-label" for="uploadedFile">Choose file to upload</label>
 
-        <label class="form-label" for="deleteAfterCount">Delete after downloads</label>
-        <input class="form-control" type="number" id="deleteAfterCount" name="deleteAfterCount" value="1" min="1" />
+            <!-- Drag and Drop Area -->
+            <div class="drag-drop-area" id="dragDropArea">
+                <div class="drag-icon">📁</div>
+                <div class="drag-drop-text">Drag & drop your file here</div>
+                <div class="drag-drop-subtext">or click to browse</div>
+                <div class="file-info" id="fileInfo" style="display: none;"></div>
+            </div>
 
-        <button type="submit" class="btn-fluent">Upload</button>
-    </form>
-</div>
+            <input class="form-control form-file-input" type="file" name="uploadedFile" id="uploadedFile" required style="display: none;" />
 
-<footer>
-    Created by RH-Factory<br/>
-    © 2025 All Rights Reserved
-</footer>
+            <label class="form-label" for="deleteAfterCount">Delete after downloads</label>
+            <input class="form-control" type="number" id="deleteAfterCount" name="deleteAfterCount" value="1" min="1" />
+
+            <button type="submit" class="btn-fluent">Upload</button>
+        </form>
+    </div>
+
+    <footer>
+        Created by RH-Factory<br />
+        © 2025 All Rights Reserved
+    </footer>
+
+    <script>
+        const dragDropArea = document.getElementById('dragDropArea');
+        const fileInput = document.getElementById('uploadedFile');
+        const fileInfo = document.getElementById('fileInfo');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dragDropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dragDropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dragDropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        // Handle dropped files
+        dragDropArea.addEventListener('drop', handleDrop, false);
+
+        // Handle click to open file dialog
+        dragDropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle file selection through input
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            dragDropArea.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dragDropArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length > 0) {
+                // Create a new FileList and assign it to the input
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(files[0]); // Only take the first file
+                fileInput.files = dataTransfer.files;
+
+                updateFileDisplay(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                updateFileDisplay(files[0]);
+            }
+        }
+
+        function updateFileDisplay(file) {
+            dragDropArea.classList.add('file-selected');
+
+            // Update the display text
+            const dragText = dragDropArea.querySelector('.drag-drop-text');
+            const dragSubtext = dragDropArea.querySelector('.drag-drop-subtext');
+            const dragIcon = dragDropArea.querySelector('.drag-icon');
+
+            dragIcon.textContent = '✓';
+            dragText.textContent = 'File selected';
+            dragSubtext.textContent = 'Click to choose a different file';
+
+            // Show file info
+            fileInfo.style.display = 'block';
+            fileInfo.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>
