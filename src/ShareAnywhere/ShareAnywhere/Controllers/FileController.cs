@@ -47,9 +47,22 @@ namespace ShareAnywhere.Controllers
             var record = _fileService.GetFile(code);
             if (record == null) return NotFound("Invalid download code.");
 
+            if (record.IsText)
+            {
+                var textContent = System.IO.File.ReadAllText(record.FilePath);
+                record.DeleteAfterCount--;
+
+                if (record.DeleteAfterCount <= 0)
+                {
+                    _fileService.DeleteFile(code);
+                }
+
+                ViewBag.TextContent = textContent;
+                return View("ViewText"); // Reuse your text view page
+            }
+
             var fileBytes = System.IO.File.ReadAllBytes(record.FilePath);
 
-            // Decrement and delete after sending the file
             record.DeleteAfterCount--;
             if (record.DeleteAfterCount <= 0)
             {
