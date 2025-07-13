@@ -6,9 +6,7 @@
 <script>
     function copyCode() {
         // Get the root URL and the code, then concatenate
-        const code = document.getElementById("codeText").innerText;
-        const rootUrl = window.location.origin;
-        const fullUrl = rootUrl + "/" + code;
+        const fullUrl = document.getElementById("codeText").innerText;
         navigator.clipboard.writeText(fullUrl).then(() => {
             const btn = document.getElementById("copyBtn");
             btn.innerText = "Copied!";
@@ -21,9 +19,7 @@
 
 <script>
     function copyCode() {
-        const code = document.getElementById("codeText").innerText;
-        const rootUrl = window.location.origin;
-        const fullUrl = rootUrl + "/" + code;
+        const fullUrl = document.getElementById("codeText").innerText;
         navigator.clipboard.writeText(fullUrl).then(() => {
             const btn = document.getElementById("copyBtn");
             btn.innerText = "Copied!";
@@ -33,8 +29,7 @@
 
     // Generate QR code after page load
     window.onload = function () {
-        const code = document.getElementById("codeText").innerText;
-        const fullUrl = window.location.origin + "/" + code;
+        const fullUrl = document.getElementById("codeText").innerText;
         new QRCode(document.getElementById("qrcode"), {
             text: fullUrl,
             width: 180,
@@ -128,14 +123,11 @@
 <div class="fluent-card">
     <h2>File Uploaded!</h2>
     <p>File: @ViewBag.FileName</p>
-    <p>Share this code:</p>
+    <p>Share the below link:</p>
     <div class="code-row">
-        <div id="codeText" class="code-text">@ViewBag.Code</div>
+        <div id="codeText" class="code-text">@ViewBag.DownloadLink</div>
         <button id="copyBtn" class="copy-btn" onclick="copyCode()">Copy</button>
     </div>
-
-
-    <p>Download URL:<br /><a href="@ViewBag.DownloadLink">@ViewBag.DownloadLink</a></p>
 
     <div style="margin-top: 2rem; text-align: center;">
         <p>Or scan the QR code:</p>

@@ -36,8 +36,8 @@ namespace ShareAnywhere.Controllers
         public IActionResult UploadResult(string code, string filename)
         {
             ViewBag.Code = code;
-            ViewBag.FileName = filename; 
-            ViewBag.DownloadLink = Url.Action("Download", new { code });
+            ViewBag.FileName = filename;
+            ViewBag.DownloadLink = Url.Action("Download", "File", new { code }, Request.Scheme, Request.Host.ToString());
             return View();
         }
 
