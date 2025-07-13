@@ -7,5 +7,7 @@ namespace ShareAnywhere.Services.Interfaces
         FileRecord SaveFile(IFormFile file, int deleteAfterCount);
         FileRecord? GetFile(string code);
         void DeleteFile(string code);
+        FileRecord? SaveText(string textContent, int deleteAfterCount);
+        FileRecord? GetText(string code);
     }
 }
