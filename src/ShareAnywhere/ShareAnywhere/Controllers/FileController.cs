@@ -58,5 +58,18 @@ namespace ShareAnywhere.Controllers
 
             return File(fileBytes, "application/octet-stream", record.FileName);
         }
+
+        [HttpPost]
+        public IActionResult UploadText(string textContent, int deleteAfterCount = 1)
+        {
+            if (string.IsNullOrWhiteSpace(textContent))
+            {
+                ModelState.AddModelError("", "Please enter text.");
+                return View("Upload");
+            }
+
+            var record = _fileService.SaveText(textContent, deleteAfterCount);
+            return RedirectToAction("UploadResult", new { code = record.Code, filename = "text-snippet" });
+        }
     }
 }

@@ -151,25 +151,44 @@
 <body>
     <header>
         <h1>Share Anywhere</h1>
-        <div class="description">Upload and download file with just 1 click</div>
+        <div class="description">Upload and share a file or text instantly</div>
     </header>
 
-    <div class="fluent-card">
-        <form method="post" enctype="multipart/form-data" asp-action="Upload">
-            <label class="form-label" for="uploadedFile">Choose file to upload</label>
+    <!-- Toggle Switch -->
+    <div class="text-center mt-4">
+        <div class="btn-group btn-group-lg" role="group" aria-label="Toggle between file and text upload">
+            <button id="fileToggle" class="btn btn-primary">File</button>
+            <button id="textToggle" class="btn btn-outline-primary">Text</button>
+        </div>
+    </div>
 
-            <!-- Drag and Drop Area -->
+    <!-- FILE UPLOAD FORM -->
+    <div class="fluent-card mt-4" id="fileUploadCard">
+        <form method="post" enctype="multipart/form-data" action="/File/Upload">
+            <label class="form-label" for="uploadedFile">Choose file to upload</label>
             <div class="drag-drop-area" id="dragDropArea">
                 <div class="drag-icon">📁</div>
                 <div class="drag-drop-text">Drag & drop your file here</div>
                 <div class="drag-drop-subtext">or click to browse</div>
                 <div class="file-info" id="fileInfo" style="display: none;"></div>
             </div>
-
             <input class="form-control form-file-input" type="file" name="uploadedFile" id="uploadedFile" required style="display: none;" />
 
             <label class="form-label" for="deleteAfterCount">Delete after downloads</label>
             <input class="form-control" type="number" id="deleteAfterCount" name="deleteAfterCount" value="1" min="1" />
+
+            <button type="submit" class="btn-fluent">Upload</button>
+        </form>
+    </div>
+
+    <!-- TEXT UPLOAD FORM -->
+    <div class="fluent-card mt-4" id="textUploadCard" style="display: none;">
+        <form method="post" action="/File/UploadText">
+            <label class="form-label" for="textContent">Enter text to upload</label>
+            <textarea class="form-control" id="textContent" name="textContent" rows="6" required></textarea>
+
+            <label class="form-label" for="textDeleteAfterCount">Delete after views</label>
+            <input class="form-control" type="number" id="textDeleteAfterCount" name="deleteAfterCount" value="1" min="1" />
 
             <button type="submit" class="btn-fluent">Upload</button>
         </form>
@@ -181,6 +200,26 @@
     </footer>
 
     <script>
+          // Toggle logic
+        const fileToggle = document.getElementById("fileToggle");
+        const textToggle = document.getElementById("textToggle");
+        const fileCard = document.getElementById("fileUploadCard");
+        const textCard = document.getElementById("textUploadCard");
+
+        fileToggle.addEventListener("click", () => {
+            fileToggle.classList.replace("btn-outline-primary", "btn-primary");
+            textToggle.classList.replace("btn-primary", "btn-outline-primary");
+            fileCard.style.display = "block";
+            textCard.style.display = "none";
+        });
+
+        textToggle.addEventListener("click", () => {
+            textToggle.classList.replace("btn-outline-primary", "btn-primary");
+            fileToggle.classList.replace("btn-primary", "btn-outline-primary");
+            textCard.style.display = "block";
+            fileCard.style.display = "none";
+        });
+
         const dragDropArea = document.getElementById('dragDropArea');
         const fileInput = document.getElementById('uploadedFile');
         const fileInfo = document.getElementById('fileInfo');
