@@ -36,8 +36,8 @@ namespace ShareAnywhere.Controllers
         public IActionResult UploadResult(string code, string filename)
         {
             ViewBag.Code = code;
-            ViewBag.FileName = filename; 
-            ViewBag.DownloadLink = Url.Action("Download", new { code });
+            ViewBag.FileName = filename;
+            ViewBag.DownloadLink = Url.Action("Download", "File", new { code }, Request.Scheme, Request.Host.ToString());
             return View();
         }
 
@@ -47,9 +47,22 @@ namespace ShareAnywhere.Controllers
             var record = _fileService.GetFile(code);
             if (record == null) return NotFound("Invalid download code.");
 
+            if (record.IsText)
+            {
+                var textContent = System.IO.File.ReadAllText(record.FilePath);
+                record.DeleteAfterCount--;
+
+                if (record.DeleteAfterCount <= 0)
+                {
+                    _fileService.DeleteFile(code);
+                }
+
+                ViewBag.TextContent = textContent;
+                return View("ViewText"); // Reuse your text view page
+            }
+
             var fileBytes = System.IO.File.ReadAllBytes(record.FilePath);
 
-            // Decrement and delete after sending the file
             record.DeleteAfterCount--;
             if (record.DeleteAfterCount <= 0)
             {
@@ -57,6 +70,19 @@ namespace ShareAnywhere.Controllers
             }
 
             return File(fileBytes, "application/octet-stream", record.FileName);
+        }
+
+        [HttpPost]
+        public IActionResult UploadText(string textContent, int deleteAfterCount = 1)
+        {
+            if (string.IsNullOrWhiteSpace(textContent))
+            {
+                ModelState.AddModelError("", "Please enter text.");
+                return View("Upload");
+            }
+
+            var record = _fileService.SaveText(textContent, deleteAfterCount);
+            return RedirectToAction("UploadResult", new { code = record.Code, filename = "text-snippet" });
         }
     }
 }
