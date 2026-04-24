@@ -1,139 +1,194 @@
-﻿@{
-    ViewData["Title"] = "Upload Complete";
+@{
+    ViewData["Title"] = "Share Ready";
 }
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<script>
-    function copyCode() {
-        // Get the root URL and the code, then concatenate
-        const fullUrl = document.getElementById("codeText").innerText;
-        navigator.clipboard.writeText(fullUrl).then(() => {
-            const btn = document.getElementById("copyBtn");
-            btn.innerText = "Copied!";
-            setTimeout(() => btn.innerText = "Copy", 2000);
-        });
-    }
-</script>
-<!-- Include QRCode.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-<script>
-    function copyCode() {
-        const fullUrl = document.getElementById("codeText").innerText;
-        navigator.clipboard.writeText(fullUrl).then(() => {
-            const btn = document.getElementById("copyBtn");
-            btn.innerText = "Copied!";
-            setTimeout(() => btn.innerText = "Copy", 2000);
-        });
-    }
-
-    // Generate QR code after page load
-    window.onload = function () {
-        const fullUrl = document.getElementById("codeText").innerText;
-        new QRCode(document.getElementById("qrcode"), {
-            text: fullUrl,
-            width: 180,
-            height: 180,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    }
-</script>
-
-<style>
-    body {
-        background-color: #f3f4f6;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    .fluent-card {
-        background: #ffffff;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-        padding: 2rem;
-        max-width: 500px;
-        margin: 3rem auto;
-        text-align: center;
-        transition: transform 0.2s;
-    }
-
-        .fluent-card:hover {
-            transform: scale(1.01);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Share Ready</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f8ff;
+            --surface: #ffffff;
+            --line: #d7e2f5;
+            --ink: #10213d;
+            --muted: #5f6f88;
+            --brand: #0a5fd4;
+            --brand-strong: #0848a4;
         }
 
-    h2 {
-        font-weight: 700;
-        color: #0078d7;
-        margin-bottom: 1.5rem;
-    }
+        * { box-sizing: border-box; }
 
-    .code-row {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 1rem 0;
-        flex-wrap: wrap;
-    }
-
-    .code-text {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #0078d7;
-        background: #f0f2f5;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        min-width: 120px;
-    }
-
-    .copy-btn {
-        background-color: #0078d7;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-        .copy-btn:hover {
-            background-color: #005a9e;
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 15% 15%, #e3eeff 0, transparent 30%),
+                radial-gradient(circle at 85% 10%, #d8f0ff 0, transparent 32%),
+                linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+            display: grid;
+            place-items: center;
+            padding: 20px;
         }
 
-    a {
-        color: #0078d7;
-        text-decoration: none;
-        font-weight: 600;
-        word-break: break-all;
-    }
+        .card {
+            width: min(760px, 100%);
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 26px 48px rgba(16, 33, 61, 0.1);
+            padding: 28px;
+        }
 
-        a:hover {
+        .kicker {
+            color: #1e9c84;
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 1.8rem;
+            letter-spacing: -0.02em;
+        }
+
+        .sub {
+            margin: 0 0 16px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .meta {
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .meta strong {
+            color: var(--brand-strong);
+        }
+
+        .link-wrap {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .link-box {
+            flex: 1 1 320px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 12px;
+            background: #f8fbff;
+            color: var(--brand-strong);
+            font-size: 0.92rem;
+            font-weight: 700;
+            word-break: break-all;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            filter: brightness(1.06);
+        }
+
+        .qr-block {
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+            margin-bottom: 16px;
+        }
+
+        #qrcode img {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 6px;
+            background: #fff;
+        }
+
+        .actions a {
+            color: var(--brand-strong);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .actions a:hover {
             text-decoration: underline;
         }
 
-    .upload-more-link {
-        display: inline-block;
-        margin-top: 2rem;
-        font-size: 1rem;
-    }
-</style>
+        @@media (max-width: 640px) {
+            .card {
+                padding: 20px;
+            }
 
-<div class="fluent-card">
-    <h2>File Uploaded!</h2>
-    <p>File: @ViewBag.FileName</p>
-    <p>Share the below link:</p>
-    <div class="code-row">
-        <div id="codeText" class="code-text">@ViewBag.DownloadLink</div>
-        <button id="copyBtn" class="copy-btn" onclick="copyCode()">Copy</button>
-    </div>
+            h1 {
+                font-size: 1.45rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="card">
+        <div class="kicker">Share Anywhere</div>
+        <h1>Your share link is ready</h1>
+        <p class="sub">Send this link or QR code to the receiver. Access is controlled by your configured download or view limit.</p>
+        <p class="meta">Shared item: <strong>@ViewBag.FileName</strong></p>
 
-    <div style="margin-top: 2rem; text-align: center;">
-        <p>Or scan the QR code:</p>
-        <div id="qrcode" style="display: inline-block;"></div>
-    </div>
+        <div class="link-wrap">
+            <div id="codeText" class="link-box">@ViewBag.DownloadLink</div>
+            <button id="copyBtn" class="btn" type="button" onclick="copyCode()">Copy Link</button>
+        </div>
 
-    <a class="upload-more-link" href="@Url.Action("Upload", "File")">Upload more</a>
+        <div class="qr-block">
+            <div style="margin-bottom:8px;font-weight:700;">QR Code</div>
+            <div id="qrcode"></div>
+        </div>
 
-</div>
+        <div class="actions">
+            <a href="@Url.Action("Upload", "File")">Create another share</a>
+        </div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        function copyCode() {
+            const fullUrl = document.getElementById("codeText").innerText;
+            navigator.clipboard.writeText(fullUrl).then(() => {
+                const btn = document.getElementById("copyBtn");
+                btn.innerText = "Copied";
+                setTimeout(() => btn.innerText = "Copy Link", 1800);
+            });
+        }
+
+        window.onload = function () {
+            const fullUrl = document.getElementById("codeText").innerText;
+            new QRCode(document.getElementById("qrcode"), {
+                text: fullUrl,
+                width: 180,
+                height: 180,
+                colorDark: "#10213d",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        };
+    </script>
+</body>
+</html>
