@@ -1,278 +1,526 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Share Anywhere</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="/ShareAnywhere_Logo.png" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #f5f8ff;
+            --surface: #ffffff;
+            --surface-soft: #f9fbff;
+            --ink: #10213d;
+            --muted: #5f6f88;
+            --line: #d7e2f5;
+            --brand: #0a5fd4;
+            --brand-strong: #0848a4;
+            --accent: #1e9c84;
+            --radius: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f3f4f6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            display: flex;
-            flex-direction: column;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 8% 18%, #deebff 0, transparent 28%),
+                radial-gradient(circle at 92% 10%, #d5f1ff 0, transparent 30%),
+                linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
             min-height: 100vh;
         }
 
-        header {
-            background-color: #ffffff;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            text-align: center;
+        .page {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 28px 20px 36px;
         }
 
-        footer {
-            background-color: #ffffff;
-            padding: 1rem;
-            text-align: center;
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: auto;
-            border-top: 1px solid #e0e0e0;
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 28px;
         }
 
-        .fluent-card {
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            padding: 2rem;
-            max-width: 500px;
-            margin: 2rem auto;
-            transition: transform 0.2s;
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            font-size: 1.2rem;
         }
 
-            .fluent-card:hover {
-                transform: scale(1.01);
-            }
-
-        .form-label {
-            margin-top: 1rem;
-            font-weight: 600;
-            color: #333;
+        .brand-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            display: block;
         }
 
-        .form-control, .form-file-input {
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            padding: 0.75rem;
-            font-size: 1rem;
-            transition: box-shadow 0.2s;
+        .tagline {
+            color: var(--muted);
+            font-size: 0.95rem;
+            text-align: right;
         }
 
-            .form-control:focus, .form-file-input:focus {
-                box-shadow: 0 0 5px rgba(0, 120, 215, 0.4);
-                border-color: #0078d7;
-            }
-
-        .btn-fluent {
-            background-color: #0078d7;
-            color: white;
-            border-radius: 8px;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            margin-top: 1.5rem;
-            width: 100%;
-            transition: background-color 0.3s ease;
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+            gap: 20px;
+            align-items: start;
         }
 
-            .btn-fluent:hover {
-                background-color: #005a9e;
-            }
+        .left-col,
+        .right-col {
+            display: grid;
+            gap: 16px;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: 0 20px 40px rgba(16, 33, 61, 0.08);
+            overflow: hidden;
+            animation: fadeSlide 500ms ease both;
+        }
+
+        .panel-content {
+            padding: 22px;
+        }
 
         h1 {
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: #2d2d2d;
-        }
-
-        .description {
-            font-size: 1rem;
-            color: #555;
-            margin-bottom: 1rem;
-        }
-
-        /* Drag and drop styles */
-        .drag-drop-area {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 2rem;
-            text-align: center;
-            background-color: #f9f9f9;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 1rem;
-        }
-
-            .drag-drop-area.dragover {
-                border-color: #0078d7;
-                background-color: #e6f3ff;
-                transform: scale(1.02);
-            }
-
-            .drag-drop-area:hover {
-                border-color: #0078d7;
-                background-color: #f0f8ff;
-            }
-
-        .drag-drop-text {
-            font-size: 1.1rem;
-            color: #666;
-            margin-bottom: 0.5rem;
-        }
-
-        .drag-drop-subtext {
-            font-size: 0.9rem;
-            color: #999;
-        }
-
-        .file-selected {
-            background-color: #e6f3ff;
-            border-color: #0078d7;
-            color: #0078d7;
-        }
-
-        .file-info {
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-            color: #0078d7;
-        }
-
-        .drag-icon {
+            margin: 0 0 12px;
+            line-height: 1.15;
             font-size: 2rem;
-            margin-bottom: 1rem;
-            color: #ccc;
+            letter-spacing: -0.02em;
         }
 
-        .drag-drop-area.dragover .drag-icon {
-            color: #0078d7;
+        .lead {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+            max-width: 48ch;
+        }
+
+        .stats {
+            display: grid;
+            gap: 10px;
+        }
+
+        .stat {
+            background: var(--surface-soft);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 18px rgba(16, 33, 61, 0.1);
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 1.05rem;
+        }
+
+        .stat span {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .switcher {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .switch-btn {
+            border: 0;
+            border-radius: 999px;
+            padding: 9px 16px;
+            font-weight: 700;
+            color: var(--muted);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .switch-btn.active {
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+            box-shadow: 0 8px 16px rgba(10, 95, 212, 0.3);
+        }
+
+        .form-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: 0 20px 36px rgba(16, 33, 61, 0.08);
+            padding: 22px;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .input,
+        .textarea {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 12px 13px;
+            font-family: inherit;
+            font-size: 0.96rem;
+            color: var(--ink);
+            background: #fff;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .input:focus,
+        .textarea:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 4px rgba(10, 95, 212, 0.12);
+        }
+
+        .textarea {
+            min-height: 170px;
+            resize: vertical;
+        }
+
+        .drop-zone {
+            border: 1.5px dashed #a7bddf;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: var(--brand);
+            transform: translateY(-1px);
+        }
+
+        .drop-title {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .drop-sub {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .file-meta {
+            display: none;
+            margin-top: 10px;
+            color: var(--brand-strong);
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .cta {
+            border: 0;
+            width: 100%;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 0.96rem;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            font-family: inherit;
+        }
+
+        .cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(10, 95, 212, 0.28);
+        }
+
+        .relay-box {
+            display: none;
+            margin-top: 16px;
+            background: #f7fbff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .relay-title {
+            margin: 0 0 6px;
+            font-size: 0.94rem;
+            font-weight: 700;
+        }
+
+        .relay-note {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 0.87rem;
+        }
+
+        .relay-row {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .relay-link {
+            color: var(--brand-strong);
+            font-weight: 700;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .relay-link:hover {
+            text-decoration: underline;
+        }
+
+        .status {
+            color: #0e3f93;
+            font-weight: 700;
+        }
+
+        .status.live {
+            animation: pulseStatus 1.2s ease-in-out infinite;
+        }
+
+        .icon {
+            margin-right: 7px;
+            color: var(--brand-strong);
+        }
+
+        #relayQrCode img {
+            margin-top: 8px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: #fff;
+            padding: 6px;
+            animation: fadeSlide 450ms ease both;
+        }
+
+        .foot {
+            margin-top: 28px;
+            color: var(--muted);
+            font-size: 0.86rem;
+            text-align: center;
+        }
+
+        @@keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+            50% { transform: translateY(-2px); }
+        }
+
+        @@keyframes pulseStatus {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.55; }
+        }
+
+        @@media (max-width: 900px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .tagline {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Share Anywhere</h1>
-        <div class="description">Upload and share a file or text instantly</div>
-    </header>
-
-    <!-- Toggle Switch -->
-    <div class="text-center mt-4">
-        <div class="btn-group btn-group-lg" role="group" aria-label="Toggle between file and text upload">
-            <button id="fileToggle" class="btn btn-primary">File</button>
-            <button id="textToggle" class="btn btn-outline-primary">Text</button>
-        </div>
-    </div>
-
-    <!-- FILE UPLOAD FORM -->
-    <div class="fluent-card mt-4" id="fileUploadCard">
-        <form method="post" enctype="multipart/form-data" action="/File/Upload">
-            <label class="form-label" for="uploadedFile">Choose file to upload</label>
-            <div class="drag-drop-area" id="dragDropArea">
-                <div class="drag-icon">📁</div>
-                <div class="drag-drop-text">Drag & drop your file here</div>
-                <div class="drag-drop-subtext">or click to browse</div>
-                <div class="file-info" id="fileInfo" style="display: none;"></div>
+    <main class="page">
+        <header class="topbar">
+            <div class="brand">
+                <img class="brand-logo" src="/ShareAnywhere_Logo.png" alt="Share Anywhere logo" />
+                <span>Share Anywhere</span>
             </div>
-            <input class="form-control form-file-input" type="file" name="uploadedFile" id="uploadedFile" required style="display: none;" />
+            <div class="tagline">Fast sharing with relay-based, on-demand transfer</div>
+        </header>
 
-            <label class="form-label" for="deleteAfterCount">Delete after downloads</label>
-            <input class="form-control" type="number" id="deleteAfterCount" name="deleteAfterCount" value="1" min="1" />
+        <section class="workspace">
+            <div class="left-col">
+                <div class="switcher" role="tablist" aria-label="Share mode selector">
+                    <button id="fileToggle" class="switch-btn active" type="button"><i class="bi bi-file-earmark-arrow-up"></i> File Share</button>
+                    <button id="textToggle" class="switch-btn" type="button"><i class="bi bi-chat-left-text"></i> Text Share</button>
+                </div>
 
-            <button type="submit" class="btn-fluent">Upload</button>
-        </form>
-    </div>
+                <section id="fileUploadCard" class="form-card">
+                    <form id="fileMetadataForm">
+                        <div class="field">
+                            <label class="label" for="uploadedFile">Choose a file</label>
+                            <div class="drop-zone" id="dragDropArea">
+                                <div class="drop-title"><i class="bi bi-cloud-arrow-up icon"></i>Drop file here or click to browse</div>
+                                <div class="drop-sub">Your file stays local until a receiver requests it.</div>
+                                <div class="file-meta" id="fileInfo"></div>
+                            </div>
+                            <input class="input" type="file" name="uploadedFile" id="uploadedFile" required style="display: none;" />
+                        </div>
 
-    <!-- TEXT UPLOAD FORM -->
-    <div class="fluent-card mt-4" id="textUploadCard" style="display: none;">
-        <form method="post" action="/File/UploadText">
-            <label class="form-label" for="textContent">Enter text to upload</label>
-            <textarea class="form-control" id="textContent" name="textContent" rows="6" required></textarea>
+                        <div class="field">
+                            <label class="label" for="deleteAfterCount">Download limit</label>
+                            <input class="input" type="number" id="deleteAfterCount" name="deleteAfterCount" value="1" min="1" />
+                        </div>
 
-            <label class="form-label" for="textDeleteAfterCount">Delete after views</label>
-            <input class="form-control" type="number" id="textDeleteAfterCount" name="deleteAfterCount" value="1" min="1" />
+                        <button type="submit" class="cta">Generate Share Link</button>
+                    </form>
 
-            <button type="submit" class="btn-fluent">Upload</button>
-        </form>
-    </div>
+                    <div id="relayInfo" class="relay-box">
+                        <p class="relay-title">Share is ready</p>
+                        <p class="relay-note">Keep this tab open. Upload starts only when a receiver opens your link.</p>
+                        <div class="relay-row"><i class="bi bi-link-45deg icon"></i>Link: <a id="downloadLink" class="relay-link" href="#" target="_blank" rel="noopener"></a></div>
+                        <div class="relay-row"><i class="bi bi-broadcast-pin icon"></i>Status: <span id="relayStatus" class="status">Waiting for receiver...</span></div>
+                        <div class="relay-row"><i class="bi bi-qr-code icon"></i>QR Code:</div>
+                        <div id="relayQrCode"></div>
+                    </div>
+                </section>
 
-    <footer>
-        Created by RH-Factory<br />
-        © 2025 All Rights Reserved
-    </footer>
+                <section id="textUploadCard" class="form-card" style="display: none;">
+                    <form method="post" action="/File/UploadText">
+                        <div class="field">
+                            <label class="label" for="textContent">Enter text content</label>
+                            <textarea class="textarea" id="textContent" name="textContent" required placeholder="Paste or type the message you want to share..."></textarea>
+                        </div>
 
+                        <div class="field">
+                            <label class="label" for="textDeleteAfterCount">View limit</label>
+                            <input class="input" type="number" id="textDeleteAfterCount" name="deleteAfterCount" value="1" min="1" />
+                        </div>
+
+                        <button type="submit" class="cta">Create Text Share</button>
+                    </form>
+                </section>
+            </div>
+
+            <aside class="right-col">
+                <section class="stats">
+                    <div class="stat">
+                        <strong><i class="bi bi-shield-lock icon"></i>Code-based access</strong>
+                        <span>Each share uses a short unique code.</span>
+                    </div>
+                    <div class="stat">
+                        <strong><i class="bi bi-hourglass-split icon"></i>Download limits</strong>
+                        <span>Set how many successful downloads are allowed.</span>
+                    </div>
+                    <div class="stat">
+                        <strong><i class="bi bi-hdd-network icon"></i>Large-file friendly</strong>
+                        <span>Relay stream keeps memory use predictable.</span>
+                    </div>
+                    <div class="stat">
+                        <strong><i class="bi bi-arrow-left-right icon"></i>Sender online relay</strong>
+                        <span>Receiver download triggers sender upload in real time.</span>
+                    </div>
+                </section>
+            </aside>
+        </section>
+
+        <footer class="foot">
+            Copyright © 2026 RH-Factory
+        </footer>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-          // Toggle logic
         const fileToggle = document.getElementById("fileToggle");
         const textToggle = document.getElementById("textToggle");
         const fileCard = document.getElementById("fileUploadCard");
         const textCard = document.getElementById("textUploadCard");
 
+        const fileForm = document.getElementById("fileMetadataForm");
+        const dragDropArea = document.getElementById("dragDropArea");
+        const fileInput = document.getElementById("uploadedFile");
+        const fileInfo = document.getElementById("fileInfo");
+        const relayInfo = document.getElementById("relayInfo");
+        const relayStatus = document.getElementById("relayStatus");
+        const downloadLink = document.getElementById("downloadLink");
+        const relayQrCode = document.getElementById("relayQrCode");
+
+        let currentFile = null;
+        let senderToken = null;
+        let isUploading = false;
+        let pollHandle = null;
+
         fileToggle.addEventListener("click", () => {
-            fileToggle.classList.replace("btn-outline-primary", "btn-primary");
-            textToggle.classList.replace("btn-primary", "btn-outline-primary");
+            fileToggle.classList.add("active");
+            textToggle.classList.remove("active");
             fileCard.style.display = "block";
             textCard.style.display = "none";
         });
 
         textToggle.addEventListener("click", () => {
-            textToggle.classList.replace("btn-outline-primary", "btn-primary");
-            fileToggle.classList.replace("btn-primary", "btn-outline-primary");
+            textToggle.classList.add("active");
+            fileToggle.classList.remove("active");
             textCard.style.display = "block";
             fileCard.style.display = "none";
         });
 
-        const dragDropArea = document.getElementById('dragDropArea');
-        const fileInput = document.getElementById('uploadedFile');
-        const fileInfo = document.getElementById('fileInfo');
-
-        // Prevent default drag behaviors
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
             dragDropArea.addEventListener(eventName, preventDefaults, false);
             document.body.addEventListener(eventName, preventDefaults, false);
         });
 
-        // Highlight drop area when item is dragged over it
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dragDropArea.addEventListener(eventName, highlight, false);
+        ["dragenter", "dragover"].forEach((eventName) => {
+            dragDropArea.addEventListener(eventName, () => dragDropArea.classList.add("dragover"), false);
         });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            dragDropArea.addEventListener(eventName, unhighlight, false);
+        ["dragleave", "drop"].forEach((eventName) => {
+            dragDropArea.addEventListener(eventName, () => dragDropArea.classList.remove("dragover"), false);
         });
 
-        // Handle dropped files
-        dragDropArea.addEventListener('drop', handleDrop, false);
-
-        // Handle click to open file dialog
-        dragDropArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        // Handle file selection through input
-        fileInput.addEventListener('change', handleFileSelect);
+        dragDropArea.addEventListener("drop", handleDrop, false);
+        dragDropArea.addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", handleFileSelect);
 
         function preventDefaults(e) {
             e.preventDefault();
             e.stopPropagation();
         }
 
-        function highlight(e) {
-            dragDropArea.classList.add('dragover');
-        }
-
-        function unhighlight(e) {
-            dragDropArea.classList.remove('dragover');
-        }
-
         function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-
+            const files = e.dataTransfer.files;
             if (files.length > 0) {
-                // Create a new FileList and assign it to the input
                 const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(files[0]); // Only take the first file
+                dataTransfer.items.add(files[0]);
                 fileInput.files = dataTransfer.files;
-
+                currentFile = files[0];
                 updateFileDisplay(files[0]);
             }
         }
@@ -280,34 +528,126 @@
         function handleFileSelect(e) {
             const files = e.target.files;
             if (files.length > 0) {
+                currentFile = files[0];
                 updateFileDisplay(files[0]);
             }
         }
 
         function updateFileDisplay(file) {
-            dragDropArea.classList.add('file-selected');
-
-            // Update the display text
-            const dragText = dragDropArea.querySelector('.drag-drop-text');
-            const dragSubtext = dragDropArea.querySelector('.drag-drop-subtext');
-            const dragIcon = dragDropArea.querySelector('.drag-icon');
-
-            dragIcon.textContent = '✓';
-            dragText.textContent = 'File selected';
-            dragSubtext.textContent = 'Click to choose a different file';
-
-            // Show file info
-            fileInfo.style.display = 'block';
-            fileInfo.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
+            fileInfo.style.display = "block";
+            fileInfo.textContent = `${file.name} (${formatFileSize(file.size)})`;
         }
 
         function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
+            if (bytes === 0) return "0 Bytes";
             const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+        }
+
+        fileForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const selectedFile = fileInput.files[0];
+            if (!selectedFile) {
+                alert("Please choose a file first.");
+                return;
+            }
+
+            currentFile = selectedFile;
+            relayStatus.textContent = "Generating share link...";
+
+            const payload = {
+                fileName: selectedFile.name,
+                contentType: selectedFile.type || "application/octet-stream",
+                fileSize: selectedFile.size,
+                deleteAfterCount: parseInt(document.getElementById("deleteAfterCount").value, 10) || 1
+            };
+
+            const response = await fetch("/File/RegisterFile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                relayStatus.textContent = "Could not create share link.";
+                return;
+            }
+
+            const result = await response.json();
+            senderToken = result.senderToken;
+
+            downloadLink.href = result.downloadLink;
+            downloadLink.textContent = result.downloadLink;
+            relayInfo.style.display = "block";
+            relayStatus.textContent = "Waiting for receiver...";
+            relayStatus.classList.remove("live");
+
+            relayQrCode.innerHTML = "";
+            new QRCode(relayQrCode, {
+                text: result.downloadLink,
+                width: 172,
+                height: 172,
+                colorDark: "#0f2242",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            if (pollHandle) {
+                clearInterval(pollHandle);
+            }
+
+            pollHandle = setInterval(pollForReceiver, 2000);
+        });
+
+        async function pollForReceiver() {
+            if (!senderToken || !currentFile || isUploading) {
+                return;
+            }
+
+            const response = await fetch(`/File/PollTransfer?senderToken=${encodeURIComponent(senderToken)}`);
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            if (!data.hasPending) {
+                return;
+            }
+
+            await relayFile(data.transferId);
+        }
+
+        async function relayFile(transferId) {
+            isUploading = true;
+            relayStatus.textContent = "Receiver connected. Relaying file...";
+            relayStatus.classList.add("live");
+
+            try {
+                const response = await fetch(`/File/RelayUploadStream?senderToken=${encodeURIComponent(senderToken)}&transferId=${encodeURIComponent(transferId)}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": currentFile.type || "application/octet-stream"
+                    },
+                    body: currentFile
+                });
+
+                const errorText = response.ok ? "" : await response.text();
+                relayStatus.textContent = response.ok
+                    ? "Transfer complete. Waiting for next receiver..."
+                    : `Transfer failed (${response.status}). ${errorText || "Waiting for next receiver..."}`;
+                relayStatus.classList.remove("live");
+            } catch {
+                relayStatus.textContent = "Transfer failed. Waiting for next receiver...";
+                relayStatus.classList.remove("live");
+            } finally {
+                isUploading = false;
+            }
         }
     </script>
 </body>
 </html>
+
+

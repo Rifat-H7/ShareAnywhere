@@ -1,12 +1,30 @@
 ﻿@{
-    ViewData["Title"] = "Downloading...";
+    ViewData["Title"] = "Preparing Download";
 }
-
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="refresh" content="0; url='@ViewBag.FileUrl'" />
+    <title>Preparing Download</title>
+    <link rel="icon" type="image/png" href="/ShareAnywhere_Logo.png" />
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background: #f5f8ff;
+            color: #10213d;
+        }
+        a { color: #0848a4; }
+    </style>
 </head>
 <body>
-    <p>Downloading your file... <a href="@ViewBag.FileUrl">Click here if not redirected</a>.</p>
+    <p>Preparing your download. <a href="@ViewBag.FileUrl">Click here</a> if it does not start automatically.</p>
 </body>
 </html>
+
+
