@@ -145,6 +145,10 @@ namespace ShareAnywhere.Controllers
             Response.Headers.ContentDisposition =
                 new ContentDispositionHeaderValue("attachment") { FileNameStar = relaySession.FileName }.ToString();
             Response.Headers.CacheControl = "no-store";
+            if (relaySession.FileSize > 0)
+            {
+                Response.ContentLength = relaySession.FileSize;
+            }
 
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(HttpContext.RequestAborted);
             timeoutCts.CancelAfter(TimeSpan.FromMinutes(10));

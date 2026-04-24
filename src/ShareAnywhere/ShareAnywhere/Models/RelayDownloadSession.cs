@@ -15,6 +15,7 @@ namespace ShareAnywhere.Models
         public required string TransferId { get; set; }
         public required string FileName { get; set; }
         public required string ContentType { get; set; }
+        public long FileSize { get; set; }
         public required ChannelReader<byte[]> Reader { get; set; }
     }
 }

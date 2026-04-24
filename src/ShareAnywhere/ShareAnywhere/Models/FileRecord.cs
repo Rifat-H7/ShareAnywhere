@@ -16,6 +16,7 @@ namespace ShareAnywhere.Models
         public bool IsText { get; set; }
         public string Text { get; set; } = string.Empty;
         public string ContentType { get; set; } = "application/octet-stream";
+        public long FileSize { get; set; }
         public string SenderToken { get; set; } = string.Empty;
         public int DeleteAfterCount { get; set; } = 1;
     }

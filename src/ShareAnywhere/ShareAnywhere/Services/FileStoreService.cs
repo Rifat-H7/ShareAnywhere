@@ -36,6 +36,7 @@ namespace ShareAnywhere.Services
                 FileName = request.FileName,
                 IsText = false,
                 ContentType = string.IsNullOrWhiteSpace(request.ContentType) ? "application/octet-stream" : request.ContentType,
+                FileSize = Math.Max(0, request.FileSize),
                 SenderToken = senderToken,
                 DeleteAfterCount = Math.Max(1, request.DeleteAfterCount)
             };
@@ -128,6 +129,7 @@ namespace ShareAnywhere.Services
                 TransferId = transferId,
                 FileName = record.FileName,
                 ContentType = record.ContentType,
+                FileSize = record.FileSize,
                 Reader = channel.Reader
             };
         }

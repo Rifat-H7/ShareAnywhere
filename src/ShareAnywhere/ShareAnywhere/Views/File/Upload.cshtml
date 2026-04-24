@@ -561,6 +561,7 @@
             const payload = {
                 fileName: selectedFile.name,
                 contentType: selectedFile.type || "application/octet-stream",
+                fileSize: selectedFile.size,
                 deleteAfterCount: parseInt(document.getElementById("deleteAfterCount").value, 10) || 1
             };
 

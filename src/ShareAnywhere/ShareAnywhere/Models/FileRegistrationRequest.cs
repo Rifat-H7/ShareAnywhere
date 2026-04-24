@@ -12,6 +12,7 @@ namespace ShareAnywhere.Models
     {
         public required string FileName { get; set; }
         public string ContentType { get; set; } = "application/octet-stream";
+        public long FileSize { get; set; }
         public int DeleteAfterCount { get; set; } = 1;
     }
 }
