@@ -2,6 +2,11 @@ using ShareAnywhere.Services;
 using ShareAnywhere.Services.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = null;
+});
+
 // Add services to the container
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IFileStoreService, FileStoreService>(); // register service
