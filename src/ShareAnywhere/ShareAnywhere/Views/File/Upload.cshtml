@@ -164,7 +164,7 @@
 
     <!-- FILE UPLOAD FORM -->
     <div class="fluent-card mt-4" id="fileUploadCard">
-        <form method="post" enctype="multipart/form-data" action="/File/Upload">
+        <form id="fileMetadataForm">
             <label class="form-label" for="uploadedFile">Choose file to upload</label>
             <div class="drag-drop-area" id="dragDropArea">
                 <div class="drag-icon">📁</div>
@@ -177,8 +177,19 @@
             <label class="form-label" for="deleteAfterCount">Delete after downloads</label>
             <input class="form-control" type="number" id="deleteAfterCount" name="deleteAfterCount" value="1" min="1" />
 
-            <button type="submit" class="btn-fluent">Upload</button>
+            <button type="submit" class="btn-fluent">Generate Share Code</button>
         </form>
+        <div id="relayInfo" style="display:none; margin-top: 1rem;">
+            <div class="alert alert-info mb-2">
+                Share this link and keep this page open. The file is uploaded only when someone downloads it.
+            </div>
+            <div class="mb-2"><strong>Link:</strong> <a id="downloadLink" href="#" target="_blank"></a></div>
+            <div class="mb-2"><strong>Status:</strong> <span id="relayStatus">Waiting for receiver...</span></div>
+            <div class="mt-3">
+                <strong>QR Code:</strong>
+                <div id="relayQrCode" style="margin-top: 0.5rem;"></div>
+            </div>
+        </div>
     </div>
 
     <!-- TEXT UPLOAD FORM -->
@@ -199,6 +210,7 @@
         © 2025 All Rights Reserved
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
           // Toggle logic
         const fileToggle = document.getElementById("fileToggle");
@@ -220,9 +232,18 @@
             fileCard.style.display = "none";
         });
 
+        const fileForm = document.getElementById('fileMetadataForm');
         const dragDropArea = document.getElementById('dragDropArea');
         const fileInput = document.getElementById('uploadedFile');
         const fileInfo = document.getElementById('fileInfo');
+        const relayInfo = document.getElementById('relayInfo');
+        const relayStatus = document.getElementById('relayStatus');
+        const downloadLink = document.getElementById('downloadLink');
+        const relayQrCode = document.getElementById('relayQrCode');
+        let currentFile = null;
+        let senderToken = null;
+        let isUploading = false;
+        let pollHandle = null;
 
         // Prevent default drag behaviors
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -272,7 +293,7 @@
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(files[0]); // Only take the first file
                 fileInput.files = dataTransfer.files;
-
+                currentFile = files[0];
                 updateFileDisplay(files[0]);
             }
         }
@@ -280,6 +301,7 @@
         function handleFileSelect(e) {
             const files = e.target.files;
             if (files.length > 0) {
+                currentFile = files[0];
                 updateFileDisplay(files[0]);
             }
         }
@@ -307,6 +329,101 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        fileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const selectedFile = fileInput.files[0];
+            if (!selectedFile) {
+                alert('Please select a file first.');
+                return;
+            }
+
+            currentFile = selectedFile;
+            relayStatus.textContent = 'Generating code...';
+
+            const payload = {
+                fileName: selectedFile.name,
+                contentType: selectedFile.type || 'application/octet-stream',
+                deleteAfterCount: parseInt(document.getElementById('deleteAfterCount').value, 10) || 1
+            };
+
+            const response = await fetch('/File/RegisterFile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                relayStatus.textContent = 'Failed to generate code.';
+                return;
+            }
+
+            const result = await response.json();
+            senderToken = result.senderToken;
+
+            downloadLink.href = result.downloadLink;
+            downloadLink.textContent = result.downloadLink;
+            relayInfo.style.display = 'block';
+            relayStatus.textContent = 'Waiting for receiver...';
+            relayQrCode.innerHTML = '';
+            new QRCode(relayQrCode, {
+                text: result.downloadLink,
+                width: 180,
+                height: 180,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            if (pollHandle) {
+                clearInterval(pollHandle);
+            }
+
+            pollHandle = setInterval(pollForReceiver, 2000);
+        });
+
+        async function pollForReceiver() {
+            if (!senderToken || !currentFile || isUploading) {
+                return;
+            }
+
+            const response = await fetch(`/File/PollTransfer?senderToken=${encodeURIComponent(senderToken)}`);
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            if (!data.hasPending) {
+                return;
+            }
+
+            await relayFile(data.transferId);
+        }
+
+        async function relayFile(transferId) {
+            isUploading = true;
+            relayStatus.textContent = 'Receiver connected. Relaying file...';
+
+            try {
+                const response = await fetch(`/File/RelayUploadStream?senderToken=${encodeURIComponent(senderToken)}&transferId=${encodeURIComponent(transferId)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': currentFile.type || 'application/octet-stream'
+                    },
+                    body: currentFile
+                });
+
+                const errorText = response.ok ? '' : await response.text();
+                relayStatus.textContent = response.ok
+                    ? 'Transfer complete. Waiting for next receiver...'
+                    : `Transfer failed (${response.status}). ${errorText || 'Waiting for next receiver...'}`;
+            } catch {
+                relayStatus.textContent = 'Transfer failed. Waiting for next receiver...';
+            } finally {
+                isUploading = false;
+            }
         }
     </script>
 </body>
