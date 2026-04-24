@@ -123,15 +123,23 @@ namespace ShareAnywhere.Controllers
 
             if (record.IsText)
             {
-                var textContent = System.IO.File.ReadAllText(record.FilePath);
-                record.DeleteAfterCount--;
-
-                if (record.DeleteAfterCount <= 0)
+                var textRecord = _fileService.GetText(code);
+                if (textRecord == null)
                 {
-                    _fileService.DeleteFile(code);
+                    return NotFound("Text content is unavailable.");
                 }
 
-                ViewBag.TextContent = textContent;
+                lock (textRecord)
+                {
+                    textRecord.DeleteAfterCount--;
+
+                    if (textRecord.DeleteAfterCount <= 0)
+                    {
+                        _fileService.DeleteFile(code);
+                    }
+                }
+
+                ViewBag.TextContent = textRecord.Text;
                 return View("ViewText");
             }
 

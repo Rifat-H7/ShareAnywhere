@@ -9,6 +9,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
+builder.Services.AddDataProtection();
 builder.Services.AddSingleton<IFileStoreService, FileStoreService>(); // register service
 
 var app = builder.Build();

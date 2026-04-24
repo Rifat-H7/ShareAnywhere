@@ -8,6 +8,8 @@
  */
 using ShareAnywhere.Models;
 using ShareAnywhere.Services.Interfaces;
+using Microsoft.AspNetCore.DataProtection;
+using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 
@@ -16,13 +18,15 @@ namespace ShareAnywhere.Services
     public class FileStoreService : IFileStoreService
     {
         private readonly IWebHostEnvironment _env;
+        private readonly IDataProtector _textProtector;
         private readonly ConcurrentDictionary<string, FileRecord> _fileMap = new();
         private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> _pendingTransfersBySender = new();
         private readonly ConcurrentDictionary<string, RelayTransfer> _relayTransfers = new();
 
-        public FileStoreService(IWebHostEnvironment env)
+        public FileStoreService(IWebHostEnvironment env, IDataProtectionProvider dataProtectionProvider)
         {
             _env = env;
+            _textProtector = dataProtectionProvider.CreateProtector("ShareAnywhere.TextSnippets.v1");
         }
 
         public FileRecord RegisterFile(FileRegistrationRequest request)
@@ -230,8 +234,9 @@ namespace ShareAnywhere.Services
 
             string filePath = Path.Combine(folderPath, fileName);
 
-            // Save the text to the file
-            File.WriteAllText(filePath, textContent);
+            // Encrypt text before writing to disk.
+            var encryptedText = _textProtector.Protect(textContent);
+            File.WriteAllText(filePath, encryptedText);
 
 
             var record = new FileRecord
@@ -240,7 +245,7 @@ namespace ShareAnywhere.Services
                 FilePath = filePath,
                 FileName = fileName,
                 IsText = true,
-                DeleteAfterCount = deleteAfterCount
+                DeleteAfterCount = Math.Max(1, deleteAfterCount)
             };
 
             _fileMap[code] = record;
@@ -256,7 +261,18 @@ namespace ShareAnywhere.Services
                     return null;
                 }
 
-                record.Text = File.ReadAllText(record.FilePath);
+                var storedText = File.ReadAllText(record.FilePath);
+
+                try
+                {
+                    record.Text = _textProtector.Unprotect(storedText);
+                }
+                catch (CryptographicException)
+                {
+                    // Backward compatibility for snippets created before encryption.
+                    record.Text = storedText;
+                }
+
                 return record;
             }
 
