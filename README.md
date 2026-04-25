@@ -2,7 +2,7 @@
 Share Anywhere is a simple ASP.NET Core MVC app for single click instant file and text sharing. Users upload a file/text and receive a unique code. Anyone with the code can instantly download the file or view the text via a direct URL.
 
 # Prerequisite:
-1. .net 8
+1. ASP.NET Core Runtime 8.0+
 
 ### ⚠︎ Caution: Copy button only works on https
 
@@ -43,5 +43,10 @@ git commit -m "Add feature X or fix bug Y"
 
 ## Live Demo:
 
-https://github.com/user-attachments/assets/30e24a53-6617-40a0-82f3-b625a90f38c6
+
+https://github.com/user-attachments/assets/acf65803-7471-447e-9180-498f3a0b325e
+
+
+
+
 
