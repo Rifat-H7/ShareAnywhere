@@ -119,6 +119,125 @@
             gap: 10px;
         }
 
+        .nearby-panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: 0 20px 36px rgba(16, 33, 61, 0.08);
+            padding: 18px;
+        }
+
+        .nearby-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .nearby-head strong {
+            font-size: 1rem;
+        }
+
+        .connection-pill {
+            border-radius: 999px;
+            background: #edf5ff;
+            color: var(--brand-strong);
+            font-size: 0.76rem;
+            font-weight: 800;
+            padding: 5px 9px;
+            white-space: nowrap;
+        }
+
+        .device-name-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .device-name-input {
+            min-width: 0;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 10px;
+            font-family: inherit;
+            font-size: 0.88rem;
+            color: var(--ink);
+            outline: none;
+        }
+
+        .device-name-input:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(10, 95, 212, 0.12);
+        }
+
+        .peer-list,
+        .incoming-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .peer-empty {
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.45;
+            padding: 10px 0 2px;
+        }
+
+        .peer-row,
+        .incoming-row {
+            display: grid;
+            gap: 8px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--surface-soft);
+            padding: 11px;
+        }
+
+        .peer-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .peer-name {
+            min-width: 0;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .peer-sub {
+            color: var(--muted);
+            font-size: 0.82rem;
+            overflow-wrap: anywhere;
+        }
+
+        .mini-btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 8px 11px;
+            background: var(--brand);
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.84rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .mini-btn.secondary {
+            background: #e7eef9;
+            color: var(--brand-strong);
+        }
+
+        .incoming-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
         .stat {
             background: var(--surface-soft);
             border: 1px solid var(--line);
@@ -431,6 +550,21 @@
             </div>
 
             <aside class="right-col">
+                <section class="nearby-panel">
+                    <div class="nearby-head">
+                        <strong><i class="bi bi-radar icon"></i>Nearby devices</strong>
+                        <span id="nearbyStatus" class="connection-pill">Connecting</span>
+                    </div>
+                    <div class="device-name-form">
+                        <input id="deviceNameInput" class="device-name-input" type="text" maxlength="40" autocomplete="off" aria-label="Device name" />
+                        <button id="saveDeviceName" class="mini-btn secondary" type="button">Save</button>
+                    </div>
+                    <div id="peerList" class="peer-list">
+                        <div class="peer-empty">Devices on the same network will appear here.</div>
+                    </div>
+                    <div id="incomingTransfers" class="incoming-list" style="margin-top: 12px;"></div>
+                </section>
+
                 <section class="stats">
                     <div class="stat">
                         <strong><i class="bi bi-shield-lock icon"></i>Code-based access</strong>
@@ -458,6 +592,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
         const fileToggle = document.getElementById("fileToggle");
         const textToggle = document.getElementById("textToggle");
@@ -472,11 +607,21 @@
         const relayStatus = document.getElementById("relayStatus");
         const downloadLink = document.getElementById("downloadLink");
         const relayQrCode = document.getElementById("relayQrCode");
+        const nearbyStatus = document.getElementById("nearbyStatus");
+        const peerList = document.getElementById("peerList");
+        const incomingTransfers = document.getElementById("incomingTransfers");
+        const deviceNameInput = document.getElementById("deviceNameInput");
+        const saveDeviceName = document.getElementById("saveDeviceName");
 
         let currentFile = null;
         let senderToken = null;
         let isUploading = false;
         let pollHandle = null;
+        let nearbyConnection = null;
+        let myPeer = null;
+        const peers = new Map();
+        let deviceName = getDeviceName();
+        deviceNameInput.value = deviceName;
 
         fileToggle.addEventListener("click", () => {
             fileToggle.classList.add("active");
@@ -508,6 +653,13 @@
         dragDropArea.addEventListener("drop", handleDrop, false);
         dragDropArea.addEventListener("click", () => fileInput.click());
         fileInput.addEventListener("change", handleFileSelect);
+        saveDeviceName.addEventListener("click", saveCustomDeviceName);
+        deviceNameInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                saveCustomDeviceName();
+            }
+        });
 
         function preventDefaults(e) {
             e.preventDefault();
@@ -558,6 +710,11 @@
             currentFile = selectedFile;
             relayStatus.textContent = "Generating share link...";
 
+            await createRelayShare();
+        });
+
+        async function createRelayShare() {
+            const selectedFile = fileInput.files[0];
             const payload = {
                 fileName: selectedFile.name,
                 contentType: selectedFile.type || "application/octet-stream",
@@ -573,7 +730,7 @@
 
             if (!response.ok) {
                 relayStatus.textContent = "Could not create share link.";
-                return;
+                return null;
             }
 
             const result = await response.json();
@@ -600,7 +757,8 @@
             }
 
             pollHandle = setInterval(pollForReceiver, 2000);
-        });
+            return result;
+        }
 
         async function pollForReceiver() {
             if (!senderToken || !currentFile || isUploading) {
@@ -646,6 +804,240 @@
                 isUploading = false;
             }
         }
+
+        function getDeviceName() {
+            const existingName = localStorage.getItem("shareAnywhereDeviceName");
+            if (existingName) {
+                return existingName;
+            }
+
+            const generatedName = `Device ${Math.floor(1000 + Math.random() * 9000)}`;
+            localStorage.setItem("shareAnywhereDeviceName", generatedName);
+            return generatedName;
+        }
+
+        async function startNearbyDiscovery() {
+            if (!window.signalR) {
+                nearbyStatus.textContent = "Offline";
+                peerList.innerHTML = '<div class="peer-empty">Nearby discovery could not load.</div>';
+                return;
+            }
+
+            nearbyConnection = new signalR.HubConnectionBuilder()
+                .withUrl(`/nearbyHub?name=${encodeURIComponent(deviceName)}`)
+                .withAutomaticReconnect()
+                .build();
+
+            nearbyConnection.on("PeerRegistered", (peer) => {
+                myPeer = peer;
+                deviceName = peer.displayName || peer.DisplayName || deviceName;
+                deviceNameInput.value = deviceName;
+                nearbyStatus.textContent = "Online";
+            });
+
+            nearbyConnection.on("PeerList", (items) => {
+                peers.clear();
+                items.forEach((peer) => peers.set(peer.peerId || peer.PeerId, normalizePeer(peer)));
+                renderPeers();
+            });
+
+            nearbyConnection.on("PeerJoined", (peer) => {
+                const normalizedPeer = normalizePeer(peer);
+                peers.set(normalizedPeer.peerId, normalizedPeer);
+                renderPeers();
+            });
+
+            nearbyConnection.on("PeerLeft", (peerId) => {
+                peers.delete(peerId);
+                renderPeers();
+            });
+
+            nearbyConnection.on("PeerUpdated", (peer) => {
+                const normalizedPeer = normalizePeer(peer);
+                peers.set(normalizedPeer.peerId, normalizedPeer);
+                renderPeers();
+            });
+
+            nearbyConnection.on("IncomingTransfer", renderIncomingTransfer);
+
+            nearbyConnection.on("TransferResponse", (response) => {
+                const receiverName = response.receiverName || response.ReceiverName || "Receiver";
+                const fileName = response.fileName || response.FileName || "file";
+                const accepted = response.accepted ?? response.Accepted;
+                relayStatus.textContent = accepted
+                    ? `${receiverName} accepted ${fileName}. Waiting for download to start...`
+                    : `${receiverName} declined ${fileName}.`;
+            });
+
+            nearbyConnection.onreconnecting(() => {
+                nearbyStatus.textContent = "Reconnecting";
+            });
+
+            nearbyConnection.onreconnected(() => {
+                nearbyStatus.textContent = "Online";
+            });
+
+            nearbyConnection.onclose(() => {
+                nearbyStatus.textContent = "Offline";
+            });
+
+            try {
+                await nearbyConnection.start();
+            } catch {
+                nearbyStatus.textContent = "Offline";
+                peerList.innerHTML = '<div class="peer-empty">Nearby discovery is unavailable right now.</div>';
+            }
+        }
+
+        async function saveCustomDeviceName() {
+            const nextName = deviceNameInput.value.trim();
+            if (!nextName) {
+                deviceNameInput.value = deviceName;
+                return;
+            }
+
+            deviceName = nextName.slice(0, 40);
+            deviceNameInput.value = deviceName;
+            localStorage.setItem("shareAnywhereDeviceName", deviceName);
+
+            if (!nearbyConnection || nearbyConnection.state !== signalR.HubConnectionState.Connected) {
+                return;
+            }
+
+            saveDeviceName.disabled = true;
+            saveDeviceName.textContent = "Saved";
+            try {
+                await nearbyConnection.invoke("UpdateName", deviceName);
+            } finally {
+                setTimeout(() => {
+                    saveDeviceName.disabled = false;
+                    saveDeviceName.textContent = "Save";
+                }, 900);
+            }
+        }
+
+        function normalizePeer(peer) {
+            return {
+                peerId: peer.peerId || peer.PeerId,
+                displayName: peer.displayName || peer.DisplayName || "Device",
+                roomKey: peer.roomKey || peer.RoomKey || ""
+            };
+        }
+
+        function renderPeers() {
+            if (peers.size === 0) {
+                peerList.innerHTML = '<div class="peer-empty">No nearby devices yet. Open ShareAnywhere on another device connected to this server.</div>';
+                return;
+            }
+
+            peerList.innerHTML = "";
+            peers.forEach((peer) => {
+                const row = document.createElement("div");
+                row.className = "peer-row";
+
+                const main = document.createElement("div");
+                main.className = "peer-main";
+
+                const text = document.createElement("div");
+                text.innerHTML = `<div class="peer-name">${escapeHtml(peer.displayName)}</div><div class="peer-sub">Ready to receive</div>`;
+
+                const button = document.createElement("button");
+                button.className = "mini-btn";
+                button.type = "button";
+                button.textContent = "Send";
+                button.addEventListener("click", () => sendToPeer(peer.peerId));
+
+                main.appendChild(text);
+                main.appendChild(button);
+                row.appendChild(main);
+                peerList.appendChild(row);
+            });
+        }
+
+        async function sendToPeer(peerId) {
+            const selectedFile = fileInput.files[0];
+            if (!selectedFile) {
+                alert("Please choose a file first.");
+                return;
+            }
+
+            if (!nearbyConnection || nearbyConnection.state !== signalR.HubConnectionState.Connected) {
+                alert("Nearby discovery is not connected yet.");
+                return;
+            }
+
+            currentFile = selectedFile;
+            relayStatus.textContent = "Preparing nearby transfer...";
+            const result = await createRelayShare();
+            if (!result) {
+                return;
+            }
+
+            await nearbyConnection.invoke(
+                "SendTransferOffer",
+                peerId,
+                selectedFile.name,
+                selectedFile.size,
+                selectedFile.type || "application/octet-stream",
+                result.downloadLink
+            );
+            relayStatus.textContent = "Offer sent. Waiting for approval...";
+        }
+
+        function renderIncomingTransfer(offer) {
+            const senderPeerId = offer.senderPeerId || offer.SenderPeerId;
+            const senderName = offer.senderName || offer.SenderName || "Nearby device";
+            const fileName = offer.fileName || offer.FileName || "file";
+            const fileSize = offer.fileSize || offer.FileSize || 0;
+            const download = offer.downloadLink || offer.DownloadLink;
+
+            const row = document.createElement("div");
+            row.className = "incoming-row";
+            row.innerHTML = `
+                <div class="peer-name">${escapeHtml(senderName)} wants to send a file</div>
+                <div class="peer-sub">${escapeHtml(fileName)} (${formatFileSize(fileSize)})</div>
+            `;
+
+            const actions = document.createElement("div");
+            actions.className = "incoming-actions";
+
+            const accept = document.createElement("button");
+            accept.className = "mini-btn";
+            accept.type = "button";
+            accept.textContent = "Accept";
+            accept.addEventListener("click", async () => {
+                accept.disabled = true;
+                decline.disabled = true;
+                accept.textContent = "Starting";
+                await nearbyConnection.invoke("SendTransferResponse", senderPeerId, true, fileName);
+                window.location.href = download;
+            });
+
+            const decline = document.createElement("button");
+            decline.className = "mini-btn secondary";
+            decline.type = "button";
+            decline.textContent = "Decline";
+            decline.addEventListener("click", async () => {
+                await nearbyConnection.invoke("SendTransferResponse", senderPeerId, false, fileName);
+                row.remove();
+            });
+
+            actions.appendChild(accept);
+            actions.appendChild(decline);
+            row.appendChild(actions);
+            incomingTransfers.prepend(row);
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        startNearbyDiscovery();
     </script>
 </body>
 </html>
