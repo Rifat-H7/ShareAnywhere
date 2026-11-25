@@ -1,0 +1,9 @@
+.git
+**/.vs
+**/bin
+**/obj
+**/obj_verify
+**/App_Data
+**/wwwroot/Uploads
+**/*.user
+**/.env

@@ -14,5 +14,6 @@ namespace ShareAnywhere.Models
         public string ContentType { get; set; } = "application/octet-stream";
         public long FileSize { get; set; }
         public int DeleteAfterCount { get; set; } = 1;
+        public bool NearbyOnly { get; set; }
     }
 }

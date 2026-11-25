@@ -12,14 +12,16 @@ namespace ShareAnywhere.Services.Interfaces
 {
     public interface IFileStoreService
     {
-        FileRecord RegisterFile(FileRegistrationRequest request);
+        FileRecord? RegisterFile(FileRegistrationRequest request);
         FileRecord? GetFile(string code);
-        PendingTransferInfo? GetPendingTransfer(string senderToken);
-        RelayDownloadSession? CreateRelayDownloadSession(string code);
+        (bool Active, PendingTransferInfo? Transfer) PollSender(string senderToken);
+        RelayDownloadSession? CreateRelayDownloadSession(string code, bool nearby = false);
         RelayUploadSession? GetRelayUploadSession(string senderToken, string transferId);
-        void CompleteRelayUpload(string transferId, bool success, Exception? error = null);
-        void DeleteFile(string code);
+        void FinishDownload(string transferId, bool success);
         FileRecord? SaveText(string textContent, int deleteAfterCount);
-        FileRecord? GetText(string code);
+        string? ConsumeText(string code);
+        NearbyOffer? CreateNearbyOffer(string senderToken, string senderPeerId, string receiverPeerId);
+        (NearbyOffer Offer, string? Ticket)? RespondToNearbyOffer(string offerId, string receiverPeerId, bool accepted);
+        void RemoveExpiredShares();
     }
 }

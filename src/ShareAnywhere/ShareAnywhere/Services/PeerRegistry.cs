@@ -15,14 +15,15 @@ namespace ShareAnywhere.Services
     {
         private readonly ConcurrentDictionary<string, NearbyPeer> _peersByConnection = new();
 
-        public NearbyPeer Add(string connectionId, string displayName, string roomKey)
+        public NearbyPeer Add(string connectionId, string deviceId, string displayName, string networkKey)
         {
             var peer = new NearbyPeer
             {
                 PeerId = connectionId,
                 ConnectionId = connectionId,
+                DeviceId = deviceId,
                 DisplayName = displayName,
-                RoomKey = roomKey
+                NetworkKey = networkKey
             };
 
             _peersByConnection[connectionId] = peer;
@@ -50,12 +51,12 @@ namespace ShareAnywhere.Services
             return peer;
         }
 
-        public IReadOnlyCollection<NearbyPeer> GetRoomPeers(string roomKey, string? excludingPeerId = null)
+        public IReadOnlyCollection<NearbyPeer> GetNetworkPeers(NearbyPeer caller)
         {
             return _peersByConnection.Values
                 .Where(peer =>
-                    string.Equals(peer.RoomKey, roomKey, StringComparison.Ordinal) &&
-                    !string.Equals(peer.PeerId, excludingPeerId, StringComparison.Ordinal))
+                    string.Equals(peer.NetworkKey, caller.NetworkKey, StringComparison.Ordinal) &&
+                    !string.Equals(peer.DeviceId, caller.DeviceId, StringComparison.Ordinal))
                 .OrderBy(peer => peer.DisplayName)
                 .ToArray();
         }

@@ -13,5 +13,8 @@ namespace ShareAnywhere.Models
     public class RelayUploadSession
     {
         public required ChannelWriter<byte[]> Writer { get; set; }
+        public required long FileSize { get; init; }
+        public required Task<int?> ReceiverResult { get; init; }
+        public required CancellationToken TransferEnded { get; init; }
     }
 }

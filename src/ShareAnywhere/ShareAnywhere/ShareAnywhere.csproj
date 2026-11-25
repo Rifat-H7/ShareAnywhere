@@ -7,4 +7,9 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);obj_verify\**</DefaultItemExcludes>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Remove="wwwroot/Uploads/**;App_Data/**" />
+    <None Remove="App_Data/**" />
+  </ItemGroup>
+
 </Project>

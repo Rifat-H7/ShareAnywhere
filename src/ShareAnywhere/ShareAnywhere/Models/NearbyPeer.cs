@@ -12,8 +12,9 @@ namespace ShareAnywhere.Models
     {
         public required string PeerId { get; set; }
         public required string ConnectionId { get; set; }
+        public required string DeviceId { get; init; }
         public required string DisplayName { get; set; }
-        public required string RoomKey { get; set; }
+        public required string NetworkKey { get; set; }
         public DateTimeOffset ConnectedAt { get; set; } = DateTimeOffset.UtcNow;
     }
 }

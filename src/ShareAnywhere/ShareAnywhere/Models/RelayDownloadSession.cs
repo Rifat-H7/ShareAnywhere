@@ -17,5 +17,6 @@ namespace ShareAnywhere.Models
         public required string ContentType { get; set; }
         public long FileSize { get; set; }
         public required ChannelReader<byte[]> Reader { get; set; }
+        public NearbyOffer? Offer { get; init; }
     }
 }

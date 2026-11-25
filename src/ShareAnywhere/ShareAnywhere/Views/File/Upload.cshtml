@@ -1,1045 +1,155 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Share Anywhere</title>
-    <link rel="icon" type="image/png" href="/ShareAnywhere_Logo.png" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #f5f8ff;
-            --surface: #ffffff;
-            --surface-soft: #f9fbff;
-            --ink: #10213d;
-            --muted: #5f6f88;
-            --line: #d7e2f5;
-            --brand: #0a5fd4;
-            --brand-strong: #0848a4;
-            --accent: #1e9c84;
-            --radius: 18px;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: "Plus Jakarta Sans", sans-serif;
-            color: var(--ink);
-            background:
-                radial-gradient(circle at 8% 18%, #deebff 0, transparent 28%),
-                radial-gradient(circle at 92% 10%, #d5f1ff 0, transparent 30%),
-                linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
-            min-height: 100vh;
-        }
-
-        .page {
-            max-width: 1080px;
-            margin: 0 auto;
-            padding: 28px 20px 36px;
-        }
-
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-
-        .brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            letter-spacing: 0.2px;
-            font-size: 1.2rem;
-        }
-
-        .brand-logo {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-            display: block;
-        }
-
-        .tagline {
-            color: var(--muted);
-            font-size: 0.95rem;
-            text-align: right;
-        }
-
-        .workspace {
-            display: grid;
-            grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
-            gap: 20px;
-            align-items: start;
-        }
-
-        .left-col,
-        .right-col {
-            display: grid;
-            gap: 16px;
-        }
-
-        .panel {
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            box-shadow: 0 20px 40px rgba(16, 33, 61, 0.08);
-            overflow: hidden;
-            animation: fadeSlide 500ms ease both;
-        }
-
-        .panel-content {
-            padding: 22px;
-        }
-
-        h1 {
-            margin: 0 0 12px;
-            line-height: 1.15;
-            font-size: 2rem;
-            letter-spacing: -0.02em;
-        }
-
-        .lead {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.55;
-            max-width: 48ch;
-        }
-
-        .stats {
-            display: grid;
-            gap: 10px;
-        }
-
-        .nearby-panel {
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            box-shadow: 0 20px 36px rgba(16, 33, 61, 0.08);
-            padding: 18px;
-        }
-
-        .nearby-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .nearby-head strong {
-            font-size: 1rem;
-        }
-
-        .connection-pill {
-            border-radius: 999px;
-            background: #edf5ff;
-            color: var(--brand-strong);
-            font-size: 0.76rem;
-            font-weight: 800;
-            padding: 5px 9px;
-            white-space: nowrap;
-        }
-
-        .device-name-form {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .device-name-input {
-            min-width: 0;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 9px 10px;
-            font-family: inherit;
-            font-size: 0.88rem;
-            color: var(--ink);
-            outline: none;
-        }
-
-        .device-name-input:focus {
-            border-color: var(--brand);
-            box-shadow: 0 0 0 3px rgba(10, 95, 212, 0.12);
-        }
-
-        .peer-list,
-        .incoming-list {
-            display: grid;
-            gap: 8px;
-        }
-
-        .peer-empty {
-            color: var(--muted);
-            font-size: 0.88rem;
-            line-height: 1.45;
-            padding: 10px 0 2px;
-        }
-
-        .peer-row,
-        .incoming-row {
-            display: grid;
-            gap: 8px;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            background: var(--surface-soft);
-            padding: 11px;
-        }
-
-        .peer-main {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .peer-name {
-            min-width: 0;
-            font-weight: 800;
-            overflow-wrap: anywhere;
-        }
-
-        .peer-sub {
-            color: var(--muted);
-            font-size: 0.82rem;
-            overflow-wrap: anywhere;
-        }
-
-        .mini-btn {
-            border: 0;
-            border-radius: 10px;
-            padding: 8px 11px;
-            background: var(--brand);
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.84rem;
-            font-weight: 800;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .mini-btn.secondary {
-            background: #e7eef9;
-            color: var(--brand-strong);
-        }
-
-        .incoming-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .stat {
-            background: var(--surface-soft);
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            padding: 14px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .stat:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 18px rgba(16, 33, 61, 0.1);
-        }
-
-        .stat strong {
-            display: block;
-            font-size: 1.05rem;
-        }
-
-        .stat span {
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .switcher {
-            display: inline-flex;
-            border-radius: 999px;
-            padding: 4px;
-            gap: 4px;
-        }
-
-        .switch-btn {
-            border: 0;
-            border-radius: 999px;
-            padding: 9px 16px;
-            font-weight: 700;
-            color: var(--muted);
-            background: transparent;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
-        }
-
-        .switch-btn.active {
-            color: #fff;
-            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-            box-shadow: 0 8px 16px rgba(10, 95, 212, 0.3);
-        }
-
-        .form-card {
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            box-shadow: 0 20px 36px rgba(16, 33, 61, 0.08);
-            padding: 22px;
-        }
-
-        .field {
-            margin-bottom: 14px;
-        }
-
-        .label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            color: var(--muted);
-            font-weight: 700;
-        }
-
-        .input,
-        .textarea {
-            width: 100%;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 12px 13px;
-            font-family: inherit;
-            font-size: 0.96rem;
-            color: var(--ink);
-            background: #fff;
-            outline: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .input:focus,
-        .textarea:focus {
-            border-color: var(--brand);
-            box-shadow: 0 0 0 4px rgba(10, 95, 212, 0.12);
-        }
-
-        .textarea {
-            min-height: 170px;
-            resize: vertical;
-        }
-
-        .drop-zone {
-            border: 1.5px dashed #a7bddf;
-            border-radius: 14px;
-            background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
-            padding: 24px 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .drop-zone:hover,
-        .drop-zone.dragover {
-            border-color: var(--brand);
-            transform: translateY(-1px);
-        }
-
-        .drop-title {
-            font-weight: 700;
-            font-size: 1rem;
-            margin-bottom: 4px;
-        }
-
-        .drop-sub {
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .file-meta {
-            display: none;
-            margin-top: 10px;
-            color: var(--brand-strong);
-            font-size: 0.88rem;
-            font-weight: 600;
-        }
-
-        .cta {
-            border: 0;
-            width: 100%;
-            border-radius: 12px;
-            padding: 12px 14px;
-            font-size: 0.96rem;
-            font-weight: 800;
-            color: #fff;
-            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.2s ease;
-            font-family: inherit;
-        }
-
-        .cta:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 20px rgba(10, 95, 212, 0.28);
-        }
-
-        .relay-box {
-            display: none;
-            margin-top: 16px;
-            background: #f7fbff;
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            padding: 14px;
-        }
-
-        .relay-title {
-            margin: 0 0 6px;
-            font-size: 0.94rem;
-            font-weight: 700;
-        }
-
-        .relay-note {
-            margin: 0 0 10px;
-            color: var(--muted);
-            font-size: 0.87rem;
-        }
-
-        .relay-row {
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .relay-link {
-            color: var(--brand-strong);
-            font-weight: 700;
-            text-decoration: none;
-            word-break: break-all;
-        }
-
-        .relay-link:hover {
-            text-decoration: underline;
-        }
-
-        .status {
-            color: #0e3f93;
-            font-weight: 700;
-        }
-
-        .status.live {
-            animation: pulseStatus 1.2s ease-in-out infinite;
-        }
-
-        .icon {
-            margin-right: 7px;
-            color: var(--brand-strong);
-        }
-
-        #relayQrCode img {
-            margin-top: 8px;
-            border-radius: 10px;
-            border: 1px solid var(--line);
-            background: #fff;
-            padding: 6px;
-            animation: fadeSlide 450ms ease both;
-        }
-
-        .foot {
-            margin-top: 28px;
-            color: var(--muted);
-            font-size: 0.86rem;
-            text-align: center;
-        }
-
-        @@keyframes fadeSlide {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-            50% { transform: translateY(-2px); }
-        }
-
-        @@keyframes pulseStatus {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.55; }
-        }
-
-        @@media (max-width: 900px) {
-            .workspace {
-                grid-template-columns: 1fr;
-            }
-
-            h1 {
-                font-size: 1.6rem;
-            }
-
-            .tagline {
-                display: none;
-            }
-        }
-    </style>
+    <link rel="icon" type="image/png" href="@Url.Content("~/ShareAnywhere_Logo.png")" />
+    <link rel="stylesheet" href="@Url.Content("~/css/site.css")" />
 </head>
 <body>
-    <main class="page">
-        <header class="topbar">
-            <div class="brand">
-                <img class="brand-logo" src="/ShareAnywhere_Logo.png" alt="Share Anywhere logo" />
-                <span>Share Anywhere</span>
-            </div>
-            <div class="tagline">Fast sharing with relay-based, on-demand transfer</div>
-        </header>
-
-        <section class="workspace">
-            <div class="left-col">
-                <div class="switcher" role="tablist" aria-label="Share mode selector">
-                    <button id="fileToggle" class="switch-btn active" type="button"><i class="bi bi-file-earmark-arrow-up"></i> File Share</button>
-                    <button id="textToggle" class="switch-btn" type="button"><i class="bi bi-chat-left-text"></i> Text Share</button>
-                </div>
-
-                <section id="fileUploadCard" class="form-card">
-                    <form id="fileMetadataForm">
-                        <div class="field">
-                            <label class="label" for="uploadedFile">Choose a file</label>
-                            <div class="drop-zone" id="dragDropArea">
-                                <div class="drop-title"><i class="bi bi-cloud-arrow-up icon"></i>Drop file here or click to browse</div>
-                                <div class="drop-sub">Your file stays local until a receiver requests it.</div>
-                                <div class="file-meta" id="fileInfo"></div>
-                            </div>
-                            <input class="input" type="file" name="uploadedFile" id="uploadedFile" required style="display: none;" />
-                        </div>
-
-                        <div class="field">
-                            <label class="label" for="deleteAfterCount">Download limit</label>
-                            <input class="input" type="number" id="deleteAfterCount" name="deleteAfterCount" value="1" min="1" />
-                        </div>
-
-                        <button type="submit" class="cta">Generate Share Link</button>
-                    </form>
-
-                    <div id="relayInfo" class="relay-box">
-                        <p class="relay-title">Share is ready</p>
-                        <p class="relay-note">Keep this tab open. Upload starts only when a receiver opens your link.</p>
-                        <div class="relay-row"><i class="bi bi-link-45deg icon"></i>Link: <a id="downloadLink" class="relay-link" href="#" target="_blank" rel="noopener"></a></div>
-                        <div class="relay-row"><i class="bi bi-broadcast-pin icon"></i>Status: <span id="relayStatus" class="status">Waiting for receiver...</span></div>
-                        <div class="relay-row"><i class="bi bi-qr-code icon"></i>QR Code:</div>
-                        <div id="relayQrCode"></div>
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="@Url.Action("Upload", "File")">
+                <img src="@Url.Content("~/ShareAnywhere_Logo.png")" width="36" height="36" alt="" />
+                Share Anywhere
+            </a>
+            <details class="device-settings" id="deviceSettings">
+                <summary class="button secondary device-button" aria-label="Edit device name">
+                    <span id="deviceNameLabel">This device</span><span aria-hidden="true">✎</span>
+                </summary>
+                <form class="device-name-form" id="deviceNameForm">
+                    <label class="label" for="deviceNameInput">Device name</label>
+                    <div class="inline-actions">
+                        <input class="input" id="deviceNameInput" maxlength="40" autocomplete="off" required />
+                        <button class="button primary" type="submit">Save</button>
                     </div>
-                </section>
+                </form>
+            </details>
+        </div>
+    </header>
 
-                <section id="textUploadCard" class="form-card" style="display: none;">
-                    <form method="post" action="/File/UploadText">
-                        <div class="field">
-                            <label class="label" for="textContent">Enter text content</label>
-                            <textarea class="textarea" id="textContent" name="textContent" required placeholder="Paste or type the message you want to share..."></textarea>
-                        </div>
+    <main class="shell workspace">
+        <div class="intro">
+            <h1>Share a file or text</h1>
+            <p>Send to a nearby device or create a share link.</p>
+        </div>
 
-                        <div class="field">
-                            <label class="label" for="textDeleteAfterCount">View limit</label>
-                            <input class="input" type="number" id="textDeleteAfterCount" name="deleteAfterCount" value="1" min="1" />
-                        </div>
-
-                        <button type="submit" class="cta">Create Text Share</button>
-                    </form>
-                </section>
-            </div>
-
-            <aside class="right-col">
-                <section class="nearby-panel">
-                    <div class="nearby-head">
-                        <strong><i class="bi bi-radar icon"></i>Nearby devices</strong>
-                        <span id="nearbyStatus" class="connection-pill">Connecting</span>
-                    </div>
-                    <div class="device-name-form">
-                        <input id="deviceNameInput" class="device-name-input" type="text" maxlength="40" autocomplete="off" aria-label="Device name" />
-                        <button id="saveDeviceName" class="mini-btn secondary" type="button">Save</button>
-                    </div>
-                    <div id="peerList" class="peer-list">
-                        <div class="peer-empty">Devices on the same network will appear here.</div>
-                    </div>
-                    <div id="incomingTransfers" class="incoming-list" style="margin-top: 12px;"></div>
-                </section>
-
-                <section class="stats">
-                    <div class="stat">
-                        <strong><i class="bi bi-shield-lock icon"></i>Code-based access</strong>
-                        <span>Each share uses a short unique code.</span>
-                    </div>
-                    <div class="stat">
-                        <strong><i class="bi bi-hourglass-split icon"></i>Download limits</strong>
-                        <span>Set how many successful downloads are allowed.</span>
-                    </div>
-                    <div class="stat">
-                        <strong><i class="bi bi-hdd-network icon"></i>Large-file friendly</strong>
-                        <span>Relay stream keeps memory use predictable.</span>
-                    </div>
-                    <div class="stat">
-                        <strong><i class="bi bi-arrow-left-right icon"></i>Sender online relay</strong>
-                        <span>Receiver download triggers sender upload in real time.</span>
-                    </div>
-                </section>
-            </aside>
+        <p id="incomingAnnouncement" class="sr-only" role="status"></p>
+        <section class="panel incoming-panel" id="incomingPanel" aria-labelledby="incomingTitle" hidden>
+            <h2 id="incomingTitle">Incoming transfers</h2>
+            <div id="incomingTransfers" class="incoming-list"></div>
         </section>
 
-        <footer class="foot">
-            Copyright © 2026 RH-Factory
-        </footer>
+        <div class="workspace-grid">
+            <section class="panel send-panel" aria-label="Share">
+                <div class="mode-switch" role="group" aria-label="What to share">
+                    <button id="fileToggle" class="mode-button" type="button" aria-pressed="true">File</button>
+                    <button id="textToggle" class="mode-button" type="button" aria-pressed="false">Text</button>
+                </div>
+
+                <section id="fileUploadCard">
+                    <form id="fileMetadataForm"
+                          data-register="@Url.Action("RegisterFile", "File")"
+                          data-poll="@Url.Action("PollTransfer", "File")"
+                          data-relay="@Url.Action("RelayUploadStream", "File")"
+                          data-hub="@Url.Content("~/nearbyHub")"
+                          data-max-file-bytes="@ShareAnywhere.Models.ShareLimits.MaxFileBytes"
+                          data-max-uses="@ShareAnywhere.Models.ShareLimits.MaxUses">
+                        <div id="filePicker">
+                            <button class="drop-zone" id="dragDropArea" type="button" aria-describedby="fileLimit">
+                                <span class="upload-icon" aria-hidden="true">↑</span>
+                                <strong>Choose a file</strong>
+                                <span>or drag and drop it here</span>
+                            </button>
+                            <p id="fileLimit" class="hint">One file up to 1 GiB</p>
+                            <div id="fileInfo" class="selected-file" hidden>
+                                <div class="file-symbol" aria-hidden="true">↗</div>
+                                <div class="file-details" role="status">
+                                    <strong id="selectedFileName"></strong>
+                                    <span id="selectedFileSize"></span>
+                                </div>
+                                <button id="changeFile" class="button secondary" type="button">Change file</button>
+                            </div>
+                            <input type="file" name="uploadedFile" id="uploadedFile" hidden />
+                        </div>
+
+                        <div class="share-options" id="fileActions" hidden>
+                            <div>
+                                <label class="label" for="deleteAfterCount">Download limit</label>
+                                <input class="input limit-input" type="number" id="deleteAfterCount" name="deleteAfterCount" value="1" min="1" max="@ShareAnywhere.Models.ShareLimits.MaxUses" required />
+                            </div>
+                            <button class="button primary" type="submit">Create link <span aria-hidden="true">↗</span></button>
+                        </div>
+                        <p id="fileMessage" class="message" role="status"></p>
+                    </form>
+
+                    <section id="relayInfo" class="link-card" aria-labelledby="linkTitle" hidden>
+                        <div class="link-heading">
+                            <div>
+                                <h2 id="linkTitle">File link</h2>
+                                <p id="sharedFileName" class="muted"></p>
+                            </div>
+                            <span id="linkRemaining" class="chip"></span>
+                        </div>
+                        <div id="linkControls">
+                            <div class="link-controls">
+                                <a id="downloadLink" class="share-url" target="_blank" rel="noopener"></a>
+                                <button class="button primary" type="button" data-copy-target="downloadLink">Copy link</button>
+                            </div>
+                            <div class="link-tools">
+                                <p class="hint">Share code <strong id="shareCode" class="share-code"></strong></p>
+                                <p id="linkExpiry" class="hint"></p>
+                                <details id="linkQr" class="qr-details" hidden>
+                                    <summary><span class="qr-show">Show QR</span><span class="qr-hide">Hide QR</span></summary>
+                                    <div id="relayQrCode" class="qr-code"></div>
+                                </details>
+                            </div>
+                            <p class="hint">Keep this tab open so the recipient can download.</p>
+                        </div>
+                        <p id="relayStatus" class="message transfer-status" role="status"></p>
+                    </section>
+                </section>
+
+                <section id="textUploadCard" hidden data-has-error="@(ViewBag.TextError != null ? "true" : "false")">
+                    <form method="post" action="@Url.Action("UploadText", "File")">
+                        @Html.AntiForgeryToken()
+                        @if (ViewBag.TextError != null)
+                        {
+                            <p class="message error" role="alert">@ViewBag.TextError</p>
+                        }
+                        <label class="label" for="textContent">Text to share</label>
+                        <textarea class="input text-entry" id="textContent" name="textContent" required placeholder="Paste or type your text"></textarea>
+                        <div class="share-options">
+                            <div>
+                                <label class="label" for="textDeleteAfterCount">View limit</label>
+                                <input class="input limit-input" type="number" id="textDeleteAfterCount" name="deleteAfterCount" value="1" min="1" max="@ShareAnywhere.Models.ShareLimits.MaxUses" required />
+                            </div>
+                            <button class="button primary" type="submit">Create text link <span aria-hidden="true">↗</span></button>
+                        </div>
+                    </form>
+                </section>
+            </section>
+
+            <aside class="panel nearby-panel" aria-labelledby="nearbyTitle">
+                <div class="nearby-heading">
+                    <h2 id="nearbyTitle">Nearby Devices</h2>
+                    <div id="nearbyStatus" class="status-pill" role="status"><span class="status-dot" aria-hidden="true"></span><span>Connecting</span></div>
+                </div>
+                <p id="nearbyHint" class="muted">Select a file to send to a nearby device.</p>
+                <button id="reconnectNearby" class="button secondary" type="button" hidden>Reconnect</button>
+                <div id="peerList" class="peer-list">
+                    <p class="empty">No nearby devices yet.</p>
+                </div>
+                <p id="nearbyMessage" class="message" role="status"></p>
+            </aside>
+        </div>
+        <footer class="page-footer">© 2026 RH-Factory</footer>
     </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-    <script>
-        const fileToggle = document.getElementById("fileToggle");
-        const textToggle = document.getElementById("textToggle");
-        const fileCard = document.getElementById("fileUploadCard");
-        const textCard = document.getElementById("textUploadCard");
-
-        const fileForm = document.getElementById("fileMetadataForm");
-        const dragDropArea = document.getElementById("dragDropArea");
-        const fileInput = document.getElementById("uploadedFile");
-        const fileInfo = document.getElementById("fileInfo");
-        const relayInfo = document.getElementById("relayInfo");
-        const relayStatus = document.getElementById("relayStatus");
-        const downloadLink = document.getElementById("downloadLink");
-        const relayQrCode = document.getElementById("relayQrCode");
-        const nearbyStatus = document.getElementById("nearbyStatus");
-        const peerList = document.getElementById("peerList");
-        const incomingTransfers = document.getElementById("incomingTransfers");
-        const deviceNameInput = document.getElementById("deviceNameInput");
-        const saveDeviceName = document.getElementById("saveDeviceName");
-
-        let currentFile = null;
-        let senderToken = null;
-        let isUploading = false;
-        let pollHandle = null;
-        let nearbyConnection = null;
-        let myPeer = null;
-        const peers = new Map();
-        let deviceName = getDeviceName();
-        deviceNameInput.value = deviceName;
-
-        fileToggle.addEventListener("click", () => {
-            fileToggle.classList.add("active");
-            textToggle.classList.remove("active");
-            fileCard.style.display = "block";
-            textCard.style.display = "none";
-        });
-
-        textToggle.addEventListener("click", () => {
-            textToggle.classList.add("active");
-            fileToggle.classList.remove("active");
-            textCard.style.display = "block";
-            fileCard.style.display = "none";
-        });
-
-        ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
-            dragDropArea.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false);
-        });
-
-        ["dragenter", "dragover"].forEach((eventName) => {
-            dragDropArea.addEventListener(eventName, () => dragDropArea.classList.add("dragover"), false);
-        });
-
-        ["dragleave", "drop"].forEach((eventName) => {
-            dragDropArea.addEventListener(eventName, () => dragDropArea.classList.remove("dragover"), false);
-        });
-
-        dragDropArea.addEventListener("drop", handleDrop, false);
-        dragDropArea.addEventListener("click", () => fileInput.click());
-        fileInput.addEventListener("change", handleFileSelect);
-        saveDeviceName.addEventListener("click", saveCustomDeviceName);
-        deviceNameInput.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                saveCustomDeviceName();
-            }
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        function handleDrop(e) {
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(files[0]);
-                fileInput.files = dataTransfer.files;
-                currentFile = files[0];
-                updateFileDisplay(files[0]);
-            }
-        }
-
-        function handleFileSelect(e) {
-            const files = e.target.files;
-            if (files.length > 0) {
-                currentFile = files[0];
-                updateFileDisplay(files[0]);
-            }
-        }
-
-        function updateFileDisplay(file) {
-            fileInfo.style.display = "block";
-            fileInfo.textContent = `${file.name} (${formatFileSize(file.size)})`;
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return "0 Bytes";
-            const k = 1024;
-            const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-        }
-
-        fileForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const selectedFile = fileInput.files[0];
-            if (!selectedFile) {
-                alert("Please choose a file first.");
-                return;
-            }
-
-            currentFile = selectedFile;
-            relayStatus.textContent = "Generating share link...";
-
-            await createRelayShare();
-        });
-
-        async function createRelayShare() {
-            const selectedFile = fileInput.files[0];
-            const payload = {
-                fileName: selectedFile.name,
-                contentType: selectedFile.type || "application/octet-stream",
-                fileSize: selectedFile.size,
-                deleteAfterCount: parseInt(document.getElementById("deleteAfterCount").value, 10) || 1
-            };
-
-            const response = await fetch("/File/RegisterFile", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                relayStatus.textContent = "Could not create share link.";
-                return null;
-            }
-
-            const result = await response.json();
-            senderToken = result.senderToken;
-
-            downloadLink.href = result.downloadLink;
-            downloadLink.textContent = result.downloadLink;
-            relayInfo.style.display = "block";
-            relayStatus.textContent = "Waiting for receiver...";
-            relayStatus.classList.remove("live");
-
-            relayQrCode.innerHTML = "";
-            new QRCode(relayQrCode, {
-                text: result.downloadLink,
-                width: 172,
-                height: 172,
-                colorDark: "#0f2242",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-
-            if (pollHandle) {
-                clearInterval(pollHandle);
-            }
-
-            pollHandle = setInterval(pollForReceiver, 2000);
-            return result;
-        }
-
-        async function pollForReceiver() {
-            if (!senderToken || !currentFile || isUploading) {
-                return;
-            }
-
-            const response = await fetch(`/File/PollTransfer?senderToken=${encodeURIComponent(senderToken)}`);
-            if (!response.ok) {
-                return;
-            }
-
-            const data = await response.json();
-            if (!data.hasPending) {
-                return;
-            }
-
-            await relayFile(data.transferId);
-        }
-
-        async function relayFile(transferId) {
-            isUploading = true;
-            relayStatus.textContent = "Receiver connected. Relaying file...";
-            relayStatus.classList.add("live");
-
-            try {
-                const response = await fetch(`/File/RelayUploadStream?senderToken=${encodeURIComponent(senderToken)}&transferId=${encodeURIComponent(transferId)}`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": currentFile.type || "application/octet-stream"
-                    },
-                    body: currentFile
-                });
-
-                const errorText = response.ok ? "" : await response.text();
-                relayStatus.textContent = response.ok
-                    ? "Transfer complete. Waiting for next receiver..."
-                    : `Transfer failed (${response.status}). ${errorText || "Waiting for next receiver..."}`;
-                relayStatus.classList.remove("live");
-            } catch {
-                relayStatus.textContent = "Transfer failed. Waiting for next receiver...";
-                relayStatus.classList.remove("live");
-            } finally {
-                isUploading = false;
-            }
-        }
-
-        function getDeviceName() {
-            const existingName = localStorage.getItem("shareAnywhereDeviceName");
-            if (existingName) {
-                return existingName;
-            }
-
-            const generatedName = `Device ${Math.floor(1000 + Math.random() * 9000)}`;
-            localStorage.setItem("shareAnywhereDeviceName", generatedName);
-            return generatedName;
-        }
-
-        async function startNearbyDiscovery() {
-            if (!window.signalR) {
-                nearbyStatus.textContent = "Offline";
-                peerList.innerHTML = '<div class="peer-empty">Nearby discovery could not load.</div>';
-                return;
-            }
-
-            nearbyConnection = new signalR.HubConnectionBuilder()
-                .withUrl(`/nearbyHub?name=${encodeURIComponent(deviceName)}`)
-                .withAutomaticReconnect()
-                .build();
-
-            nearbyConnection.on("PeerRegistered", (peer) => {
-                myPeer = peer;
-                deviceName = peer.displayName || peer.DisplayName || deviceName;
-                deviceNameInput.value = deviceName;
-                nearbyStatus.textContent = "Online";
-            });
-
-            nearbyConnection.on("PeerList", (items) => {
-                peers.clear();
-                items.forEach((peer) => peers.set(peer.peerId || peer.PeerId, normalizePeer(peer)));
-                renderPeers();
-            });
-
-            nearbyConnection.on("PeerJoined", (peer) => {
-                const normalizedPeer = normalizePeer(peer);
-                peers.set(normalizedPeer.peerId, normalizedPeer);
-                renderPeers();
-            });
-
-            nearbyConnection.on("PeerLeft", (peerId) => {
-                peers.delete(peerId);
-                renderPeers();
-            });
-
-            nearbyConnection.on("PeerUpdated", (peer) => {
-                const normalizedPeer = normalizePeer(peer);
-                peers.set(normalizedPeer.peerId, normalizedPeer);
-                renderPeers();
-            });
-
-            nearbyConnection.on("IncomingTransfer", renderIncomingTransfer);
-
-            nearbyConnection.on("TransferResponse", (response) => {
-                const receiverName = response.receiverName || response.ReceiverName || "Receiver";
-                const fileName = response.fileName || response.FileName || "file";
-                const accepted = response.accepted ?? response.Accepted;
-                relayStatus.textContent = accepted
-                    ? `${receiverName} accepted ${fileName}. Waiting for download to start...`
-                    : `${receiverName} declined ${fileName}.`;
-            });
-
-            nearbyConnection.onreconnecting(() => {
-                nearbyStatus.textContent = "Reconnecting";
-            });
-
-            nearbyConnection.onreconnected(() => {
-                nearbyStatus.textContent = "Online";
-            });
-
-            nearbyConnection.onclose(() => {
-                nearbyStatus.textContent = "Offline";
-            });
-
-            try {
-                await nearbyConnection.start();
-            } catch {
-                nearbyStatus.textContent = "Offline";
-                peerList.innerHTML = '<div class="peer-empty">Nearby discovery is unavailable right now.</div>';
-            }
-        }
-
-        async function saveCustomDeviceName() {
-            const nextName = deviceNameInput.value.trim();
-            if (!nextName) {
-                deviceNameInput.value = deviceName;
-                return;
-            }
-
-            deviceName = nextName.slice(0, 40);
-            deviceNameInput.value = deviceName;
-            localStorage.setItem("shareAnywhereDeviceName", deviceName);
-
-            if (!nearbyConnection || nearbyConnection.state !== signalR.HubConnectionState.Connected) {
-                return;
-            }
-
-            saveDeviceName.disabled = true;
-            saveDeviceName.textContent = "Saved";
-            try {
-                await nearbyConnection.invoke("UpdateName", deviceName);
-            } finally {
-                setTimeout(() => {
-                    saveDeviceName.disabled = false;
-                    saveDeviceName.textContent = "Save";
-                }, 900);
-            }
-        }
-
-        function normalizePeer(peer) {
-            return {
-                peerId: peer.peerId || peer.PeerId,
-                displayName: peer.displayName || peer.DisplayName || "Device",
-                roomKey: peer.roomKey || peer.RoomKey || ""
-            };
-        }
-
-        function renderPeers() {
-            if (peers.size === 0) {
-                peerList.innerHTML = '<div class="peer-empty">No nearby devices yet. Open ShareAnywhere on another device connected to this server.</div>';
-                return;
-            }
-
-            peerList.innerHTML = "";
-            peers.forEach((peer) => {
-                const row = document.createElement("div");
-                row.className = "peer-row";
-
-                const main = document.createElement("div");
-                main.className = "peer-main";
-
-                const text = document.createElement("div");
-                text.innerHTML = `<div class="peer-name">${escapeHtml(peer.displayName)}</div><div class="peer-sub">Ready to receive</div>`;
-
-                const button = document.createElement("button");
-                button.className = "mini-btn";
-                button.type = "button";
-                button.textContent = "Send";
-                button.addEventListener("click", () => sendToPeer(peer.peerId));
-
-                main.appendChild(text);
-                main.appendChild(button);
-                row.appendChild(main);
-                peerList.appendChild(row);
-            });
-        }
-
-        async function sendToPeer(peerId) {
-            const selectedFile = fileInput.files[0];
-            if (!selectedFile) {
-                alert("Please choose a file first.");
-                return;
-            }
-
-            if (!nearbyConnection || nearbyConnection.state !== signalR.HubConnectionState.Connected) {
-                alert("Nearby discovery is not connected yet.");
-                return;
-            }
-
-            currentFile = selectedFile;
-            relayStatus.textContent = "Preparing nearby transfer...";
-            const result = await createRelayShare();
-            if (!result) {
-                return;
-            }
-
-            await nearbyConnection.invoke(
-                "SendTransferOffer",
-                peerId,
-                selectedFile.name,
-                selectedFile.size,
-                selectedFile.type || "application/octet-stream",
-                result.downloadLink
-            );
-            relayStatus.textContent = "Offer sent. Waiting for approval...";
-        }
-
-        function renderIncomingTransfer(offer) {
-            const senderPeerId = offer.senderPeerId || offer.SenderPeerId;
-            const senderName = offer.senderName || offer.SenderName || "Nearby device";
-            const fileName = offer.fileName || offer.FileName || "file";
-            const fileSize = offer.fileSize || offer.FileSize || 0;
-            const download = offer.downloadLink || offer.DownloadLink;
-
-            const row = document.createElement("div");
-            row.className = "incoming-row";
-            row.innerHTML = `
-                <div class="peer-name">${escapeHtml(senderName)} wants to send a file</div>
-                <div class="peer-sub">${escapeHtml(fileName)} (${formatFileSize(fileSize)})</div>
-            `;
-
-            const actions = document.createElement("div");
-            actions.className = "incoming-actions";
-
-            const accept = document.createElement("button");
-            accept.className = "mini-btn";
-            accept.type = "button";
-            accept.textContent = "Accept";
-            accept.addEventListener("click", async () => {
-                accept.disabled = true;
-                decline.disabled = true;
-                accept.textContent = "Starting";
-                await nearbyConnection.invoke("SendTransferResponse", senderPeerId, true, fileName);
-                window.location.href = download;
-            });
-
-            const decline = document.createElement("button");
-            decline.className = "mini-btn secondary";
-            decline.type = "button";
-            decline.textContent = "Decline";
-            decline.addEventListener("click", async () => {
-                await nearbyConnection.invoke("SendTransferResponse", senderPeerId, false, fileName);
-                row.remove();
-            });
-
-            actions.appendChild(accept);
-            actions.appendChild(decline);
-            row.appendChild(actions);
-            incomingTransfers.prepend(row);
-        }
-
-        function escapeHtml(value) {
-            return String(value)
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("'", "&#039;");
-        }
-
-        startNearbyDiscovery();
-    </script>
+    <script src="@Url.Content("~/lib/qrcodejs/qrcode.min.js")"></script>
+    <script src="@Url.Content("~/lib/signalr/signalr.min.js")"></script>
+    <script src="@Url.Content("~/js/share-actions.js")"></script>
+    <script src="@Url.Content("~/js/site.js")"></script>
 </body>
 </html>
-
-

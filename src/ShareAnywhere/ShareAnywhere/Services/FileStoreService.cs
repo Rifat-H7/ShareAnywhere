@@ -1,293 +1,366 @@
 /*
- * © 2026 RH-Factory
+ * Â© 2026 RH-Factory
  * Author: Md. Zawad Hossain Rifat
  * All rights reserved.
  *
  * This source code is the property of RH-Factory.
  * Unauthorized copying or distribution is prohibited.
  */
+using Microsoft.AspNetCore.DataProtection;
 using ShareAnywhere.Models;
 using ShareAnywhere.Services.Interfaces;
-using Microsoft.AspNetCore.DataProtection;
 using System.Security.Cryptography;
-using System.Collections.Concurrent;
 using System.Threading.Channels;
 
-namespace ShareAnywhere.Services
+namespace ShareAnywhere.Services;
+
+public sealed class FileStoreService : IFileStoreService
 {
-    public class FileStoreService : IFileStoreService
+    private readonly object _gate = new();
+    private readonly Dictionary<string, FileRecord> _shares = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, FileRecord> _senders = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RelayTransfer> _transfers = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, NearbyOfferState> _offers = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, FileRecord> _nearbyTickets = new(StringComparer.Ordinal);
+    private readonly string _snippetDirectory;
+    private readonly IDataProtector _textProtector;
+    private readonly ILogger<FileStoreService> _logger;
+    private readonly TimeProvider _clock;
+
+    public FileStoreService(
+        IWebHostEnvironment environment,
+        IDataProtectionProvider dataProtection,
+        ILogger<FileStoreService> logger,
+        TimeProvider clock)
     {
-        private readonly IWebHostEnvironment _env;
-        private readonly IDataProtector _textProtector;
-        private readonly ConcurrentDictionary<string, FileRecord> _fileMap = new();
-        private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> _pendingTransfersBySender = new();
-        private readonly ConcurrentDictionary<string, RelayTransfer> _relayTransfers = new();
+        _snippetDirectory = Path.Combine(environment.ContentRootPath, "App_Data", "Snippets");
+        _textProtector = dataProtection.CreateProtector("ShareAnywhere.TextSnippets.v1");
+        _logger = logger;
+        _clock = clock;
+    }
 
-        public FileStoreService(IWebHostEnvironment env, IDataProtectionProvider dataProtectionProvider)
+    public FileRecord? RegisterFile(FileRegistrationRequest request)
+    {
+        lock (_gate)
         {
-            _env = env;
-            _textProtector = dataProtectionProvider.CreateProtector("ShareAnywhere.TextSnippets.v1");
-        }
-
-        public FileRecord RegisterFile(FileRegistrationRequest request)
-        {
-            var code = GenerateUniqueCode();
-            var senderToken = GenerateSenderToken();
+            if (_shares.Count >= ShareLimits.MaxShares)
+            {
+                return null;
+            }
 
             var record = new FileRecord
             {
-                Code = code,
+                Code = GenerateCode(),
                 FileName = request.FileName,
-                IsText = false,
-                ContentType = string.IsNullOrWhiteSpace(request.ContentType) ? "application/octet-stream" : request.ContentType,
-                FileSize = Math.Max(0, request.FileSize),
-                SenderToken = senderToken,
-                DeleteAfterCount = Math.Max(1, request.DeleteAfterCount)
+                ContentType = request.ContentType,
+                FileSize = request.FileSize,
+                SenderToken = GenerateToken(),
+                DeleteAfterCount = request.NearbyOnly ? 1 : request.DeleteAfterCount,
+                NearbyOnly = request.NearbyOnly,
+                ExpiresAt = _clock.GetUtcNow() + ShareLimits.Lifetime
             };
 
-            _fileMap[code] = record;
-            _pendingTransfersBySender[senderToken] = new ConcurrentQueue<string>();
-
+            _shares.Add(record.Code, record);
+            _senders.Add(record.SenderToken, record);
             return record;
         }
+    }
 
-        public FileRecord? GetFile(string code)
+    public FileRecord? GetFile(string code)
+    {
+        lock (_gate)
         {
-            if (_fileMap.TryGetValue(code.ToUpperInvariant(), out var record))
-            {
-                return record;
-            }
-
-            return null;
+            return _shares.TryGetValue(code, out var record) && IsActive(record) && !record.NearbyOnly
+                ? record
+                : null;
         }
+    }
 
-        public PendingTransferInfo? GetPendingTransfer(string senderToken)
+    public (bool Active, PendingTransferInfo? Transfer) PollSender(string senderToken)
+    {
+        lock (_gate)
         {
-            if (!_pendingTransfersBySender.TryGetValue(senderToken, out var queue))
+            if (!_senders.TryGetValue(senderToken, out var record))
             {
-                return null;
+                return (false, null);
             }
 
-            while (queue.TryDequeue(out var transferId))
+            var transfer = _transfers.Values.FirstOrDefault(transfer => transfer.Share == record && !transfer.Started);
+            return (transfer != null || IsActive(record), transfer == null ? null : new PendingTransferInfo
             {
-                if (_relayTransfers.TryGetValue(transferId, out var transfer))
-                {
-                    return new PendingTransferInfo
-                    {
-                        TransferId = transferId,
-                        FileName = transfer.FileName
-                    };
-                }
-            }
-
-            return null;
+                TransferId = transfer.Id,
+                FileName = record.FileName
+            });
         }
+    }
 
-        public RelayDownloadSession? CreateRelayDownloadSession(string code)
+    public RelayDownloadSession? CreateRelayDownloadSession(string code, bool nearby = false)
+    {
+        lock (_gate)
         {
-            if (!_fileMap.TryGetValue(code.ToUpperInvariant(), out var record))
+            var index = nearby ? _nearbyTickets : _shares;
+            if (!index.TryGetValue(code, out var record) || record.NearbyOnly != nearby ||
+                record.IsText || !IsActive(record) || record.ActiveDownloads >= record.DeleteAfterCount ||
+                _transfers.Count >= ShareLimits.MaxActiveTransfers)
             {
                 return null;
             }
 
-            if (record.IsText)
-            {
-                return null;
-            }
-
-            if (record.DeleteAfterCount <= 0)
-            {
-                return null;
-            }
-
-            var transferId = Guid.NewGuid().ToString("N");
             var channel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(16)
             {
                 SingleReader = true,
                 SingleWriter = true,
                 FullMode = BoundedChannelFullMode.Wait
             });
-
-            var transfer = new RelayTransfer
-            {
-                TransferId = transferId,
-                Code = record.Code,
-                SenderToken = record.SenderToken,
-                FileName = record.FileName,
-                Writer = channel.Writer,
-                Reader = channel.Reader
-            };
-
-            _relayTransfers[transferId] = transfer;
-
-            if (!_pendingTransfersBySender.TryGetValue(record.SenderToken, out var queue))
-            {
-                queue = new ConcurrentQueue<string>();
-                _pendingTransfersBySender[record.SenderToken] = queue;
-            }
-
-            queue.Enqueue(transferId);
+            var transfer = new RelayTransfer(GenerateToken(), record, channel);
+            _transfers.Add(transfer.Id, transfer);
+            record.ActiveDownloads++;
 
             return new RelayDownloadSession
             {
-                TransferId = transferId,
+                TransferId = transfer.Id,
                 FileName = record.FileName,
                 ContentType = record.ContentType,
                 FileSize = record.FileSize,
-                Reader = channel.Reader
+                Reader = channel.Reader,
+                Offer = nearby ? _offers.Values.FirstOrDefault(state => state.Share == record)?.Offer : null
             };
         }
+    }
 
-        public RelayUploadSession? GetRelayUploadSession(string senderToken, string transferId)
+    public RelayUploadSession? GetRelayUploadSession(string senderToken, string transferId)
+    {
+        lock (_gate)
         {
-            if (!_relayTransfers.TryGetValue(transferId, out var transfer))
+            if (!_transfers.TryGetValue(transferId, out var transfer) ||
+                transfer.Started ||
+                !string.Equals(transfer.Share.SenderToken, senderToken, StringComparison.Ordinal))
             {
                 return null;
             }
 
-            if (!string.Equals(transfer.SenderToken, senderToken, StringComparison.Ordinal))
-            {
-                return null;
-            }
-
-            if (Interlocked.CompareExchange(ref transfer.Started, 1, 0) != 0)
-            {
-                return null;
-            }
-
+            transfer.Started = true;
             return new RelayUploadSession
             {
-                Writer = transfer.Writer
+                Writer = transfer.Channel.Writer,
+                FileSize = transfer.Share.FileSize,
+                TransferEnded = transfer.Ended.Token,
+                ReceiverResult = transfer.Result.Task
             };
         }
+    }
 
-        public void CompleteRelayUpload(string transferId, bool success, Exception? error = null)
+    public void FinishDownload(string transferId, bool success)
+    {
+        RelayTransfer? transfer;
+        lock (_gate)
         {
-            if (!_relayTransfers.TryRemove(transferId, out var transfer))
+            if (!_transfers.Remove(transferId, out transfer))
             {
                 return;
             }
 
-            if (success)
+            var record = transfer.Share;
+            record.ActiveDownloads--;
+            if (success && --record.DeleteAfterCount == 0)
             {
-                transfer.Writer.TryComplete();
-
-                if (_fileMap.TryGetValue(transfer.Code, out var record))
-                {
-                    lock (record)
-                    {
-                        record.DeleteAfterCount--;
-                        if (record.DeleteAfterCount <= 0)
-                        {
-                            DeleteFile(record.Code);
-                        }
-                    }
-                }
-
-                return;
+                RemoveShare(record);
             }
 
-            transfer.Writer.TryComplete(error ?? new IOException("Transfer failed."));
+            transfer.Result.TrySetResult(success ? record.DeleteAfterCount : null);
         }
 
-        public void DeleteFile(string code)
+        if (!success)
         {
-            if (_fileMap.TryRemove(code.ToUpperInvariant(), out var record))
-            {
-                if (record.IsText && File.Exists(record.FilePath))
-                {
-                    File.Delete(record.FilePath);
-                }
+            transfer.Channel.Writer.TryComplete(new IOException("The download ended before completion."));
+            transfer.Ended.Cancel();
+        }
 
-                if (!string.IsNullOrWhiteSpace(record.SenderToken))
-                {
-                    _pendingTransfersBySender.TryRemove(record.SenderToken, out _);
-                }
+        transfer.Ended.Dispose();
+    }
+
+    public FileRecord? SaveText(string textContent, int deleteAfterCount)
+    {
+        lock (_gate)
+        {
+            if (_shares.Count >= ShareLimits.MaxShares)
+            {
+                return null;
             }
-        }
 
-        private string GenerateUniqueCode()
-        {
-            string code;
-            do
-            {
-                code = Path.GetRandomFileName().Replace(".", "").Substring(0, 6).ToUpperInvariant();
-            } while (_fileMap.ContainsKey(code));
-
-            return code;
-        }
-
-        private static string GenerateSenderToken()
-        {
-            return Guid.NewGuid().ToString("N");
-        }
-
-        public FileRecord? SaveText(string textContent, int deleteAfterCount)
-        {
-            // Generate a unique file name
-            var code = GenerateUniqueCode();
-            var fileName = $"{code}.txt";
-
-            // Define the path where the file will be saved
-            string folderPath = Path.Combine(_env.WebRootPath, "Uploads");
-            Directory.CreateDirectory(folderPath); // Ensure folder exists
-
-            string filePath = Path.Combine(folderPath, fileName);
-
-            // Encrypt text before writing to disk.
-            var encryptedText = _textProtector.Protect(textContent);
-            File.WriteAllText(filePath, encryptedText);
-
-
+            var code = GenerateCode();
             var record = new FileRecord
             {
                 Code = code,
-                FilePath = filePath,
-                FileName = fileName,
+                FilePath = Path.Combine(_snippetDirectory, $"snippet-{code}.dat"),
+                FileName = "text-snippet",
                 IsText = true,
-                DeleteAfterCount = Math.Max(1, deleteAfterCount)
+                DeleteAfterCount = deleteAfterCount,
+                ExpiresAt = _clock.GetUtcNow() + ShareLimits.Lifetime
             };
 
-            _fileMap[code] = record;
-            return record;
-        }
-
-        public FileRecord? GetText(string code)
-        {
-            if (_fileMap.TryGetValue(code.ToUpperInvariant(), out var record))
+            Directory.CreateDirectory(_snippetDirectory);
+            using (var stream = new FileStream(record.FilePath, FileMode.CreateNew, FileAccess.Write))
+            using (var writer = new StreamWriter(stream))
             {
-                if (!File.Exists(record.FilePath))
-                {
-                    return null;
-                }
-
-                var storedText = File.ReadAllText(record.FilePath);
-
-                try
-                {
-                    record.Text = _textProtector.Unprotect(storedText);
-                }
-                catch (CryptographicException)
-                {
-                    // Backward compatibility for snippets created before encryption.
-                    record.Text = storedText;
-                }
-
-                return record;
+                writer.Write(_textProtector.Protect(textContent));
             }
 
-            return null;
+            _shares.Add(code, record);
+            return record;
+        }
+    }
+
+    public string? ConsumeText(string code)
+    {
+        lock (_gate)
+        {
+            if (!_shares.TryGetValue(code, out var record) || !record.IsText || !IsActive(record))
+            {
+                return null;
+            }
+
+            try
+            {
+                var text = _textProtector.Unprotect(File.ReadAllText(record.FilePath));
+                if (--record.DeleteAfterCount == 0)
+                {
+                    RemoveShare(record);
+                }
+
+                return text;
+            }
+            catch (Exception error) when (error is CryptographicException or FileNotFoundException)
+            {
+                _logger.LogWarning(error, "A stored snippet could not be read");
+                RemoveShare(record);
+                return null;
+            }
+        }
+    }
+
+    public NearbyOffer? CreateNearbyOffer(string senderToken, string senderPeerId, string receiverPeerId)
+    {
+        lock (_gate)
+        {
+            if (!_senders.TryGetValue(senderToken, out var record) || !record.NearbyOnly || !IsActive(record) ||
+                _offers.Values.Any(state => state.Share == record))
+            {
+                return null;
+            }
+
+            var offer = new NearbyOffer(GenerateToken(), senderPeerId, receiverPeerId, record.FileName, record.FileSize);
+            _offers.Add(offer.Id, new NearbyOfferState(offer, record));
+            return offer;
+        }
+    }
+
+    public (NearbyOffer Offer, string? Ticket)? RespondToNearbyOffer(string offerId, string receiverPeerId, bool accepted)
+    {
+        lock (_gate)
+        {
+            if (!_offers.TryGetValue(offerId, out var state) || state.Offer.ReceiverPeerId != receiverPeerId ||
+                state.Ticket != null || !IsActive(state.Share))
+            {
+                return null;
+            }
+
+            if (!accepted)
+            {
+                RemoveShare(state.Share);
+                return (state.Offer, null);
+            }
+
+            state.Ticket = GenerateToken();
+            _nearbyTickets.Add(state.Ticket, state.Share);
+            return (state.Offer, state.Ticket);
+        }
+    }
+
+    public void RemoveExpiredShares()
+    {
+        lock (_gate)
+        {
+            foreach (var record in _shares.Values.Where(record => !IsActive(record) && record.ActiveDownloads == 0).ToArray())
+            {
+                RemoveShare(record);
+            }
+
+            if (!Directory.Exists(_snippetDirectory))
+            {
+                return;
+            }
+
+            var tracked = _shares.Values.Where(record => record.IsText)
+                .Select(record => record.FilePath).ToHashSet(StringComparer.Ordinal);
+            foreach (var path in Directory.EnumerateFiles(_snippetDirectory, "snippet-*.dat"))
+            {
+                if (!tracked.Contains(path))
+                {
+                    DeleteSnippet(path);
+                }
+            }
+        }
+    }
+
+    private bool IsActive(FileRecord record) => record.ExpiresAt > _clock.GetUtcNow();
+
+    private void RemoveShare(FileRecord record)
+    {
+        _shares.Remove(record.Code);
+        if (record.IsText)
+        {
+            DeleteSnippet(record.FilePath);
+            return;
         }
 
-        private class RelayTransfer
+        _senders.Remove(record.SenderToken);
+        var state = _offers.Values.FirstOrDefault(offer => offer.Share == record);
+        if (state != null)
         {
-            public required string TransferId { get; set; }
-            public required string Code { get; set; }
-            public required string SenderToken { get; set; }
-            public required string FileName { get; set; }
-            public required ChannelWriter<byte[]> Writer { get; set; }
-            public required ChannelReader<byte[]> Reader { get; set; }
-            public int Started;
+            _offers.Remove(state.Offer.Id);
+            if (state.Ticket != null)
+            {
+                _nearbyTickets.Remove(state.Ticket);
+            }
         }
+    }
+
+    private void DeleteSnippet(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning(error, "A stored snippet could not be removed");
+        }
+    }
+
+    private string GenerateCode()
+    {
+        const string alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+        string code;
+        do
+        {
+            code = RandomNumberGenerator.GetString(alphabet, 8);
+        } while (_shares.ContainsKey(code));
+
+        return code;
+    }
+
+    private static string GenerateToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(24));
+
+    private sealed record RelayTransfer(string Id, FileRecord Share, Channel<byte[]> Channel)
+    {
+        public bool Started { get; set; }
+        public CancellationTokenSource Ended { get; } = new();
+        public TaskCompletionSource<int?> Result { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    private sealed record NearbyOfferState(NearbyOffer Offer, FileRecord Share)
+    {
+        public string? Ticket { get; set; }
     }
 }

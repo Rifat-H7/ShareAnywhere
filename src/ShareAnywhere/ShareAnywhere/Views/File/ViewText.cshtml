@@ -1,5 +1,5 @@
-﻿@{
-    ViewData["Title"] = "Shared Text";
+@model string
+@{
     var textContent = ViewBag.TextContent as string;
 }
 <!DOCTYPE html>
@@ -7,162 +7,46 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Shared Text</title>
-    <link rel="icon" type="image/png" href="/ShareAnywhere_Logo.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #f5f8ff;
-            --surface: #ffffff;
-            --line: #d7e2f5;
-            --ink: #10213d;
-            --muted: #5f6f88;
-            --brand: #0a5fd4;
-            --brand-strong: #0848a4;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: "Plus Jakarta Sans", sans-serif;
-            color: var(--ink);
-            background:
-                radial-gradient(circle at 10% 12%, #e3eeff 0, transparent 30%),
-                radial-gradient(circle at 88% 10%, #d8f0ff 0, transparent 32%),
-                linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
-            padding: 24px 16px;
-        }
-
-        .wrap {
-            width: min(920px, 100%);
-            margin: 0 auto;
-        }
-
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: 20px;
-            box-shadow: 0 24px 44px rgba(16, 33, 61, 0.09);
-            overflow: hidden;
-        }
-
-        .head {
-            padding: 20px;
-            border-bottom: 1px solid var(--line);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .title {
-            margin: 0;
-            font-size: 1.35rem;
-            letter-spacing: -0.01em;
-        }
-
-        .subtitle {
-            margin: 4px 0 0;
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .copy-btn {
-            border: 0;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-            color: #fff;
-            padding: 10px 14px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .copy-btn:hover {
-            filter: brightness(1.05);
-        }
-
-        .body {
-            padding: 20px;
-        }
-
-        pre {
-            margin: 0;
-            padding: 16px;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            background: #f9fbff;
-            white-space: pre-wrap;
-            word-break: break-word;
-            font: 500 0.95rem/1.6 Consolas, "Courier New", monospace;
-            color: #1c3157;
-        }
-
-        .empty {
-            color: var(--muted);
-            margin: 0;
-        }
-
-        @@media (max-width: 640px) {
-            .head {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
+    <title>Shared text · Share Anywhere</title>
+    <link rel="icon" type="image/png" href="@Url.Content("~/ShareAnywhere_Logo.png")" />
+    <link rel="stylesheet" href="@Url.Content("~/css/site.css")" />
 </head>
 <body>
-    <main class="wrap">
-        <section class="card">
-            <header class="head">
-                <div>
-                    <h1 class="title">Shared Text</h1>
-                    <p class="subtitle">Copy or review the content below.</p>
-                </div>
-                @if (!string.IsNullOrWhiteSpace(textContent))
-                {
-                    <button id="copyButton" class="copy-btn" onclick="copyText()">Copy Text</button>
-                }
-            </header>
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="@Url.Action("Upload", "File")">
+                <img src="@Url.Content("~/ShareAnywhere_Logo.png")" width="36" height="36" alt="" />
+                Share Anywhere
+            </a>
+        </div>
+    </header>
 
-            <div class="body">
-                @if (!string.IsNullOrWhiteSpace(textContent))
-                {
-                    <pre id="textContent">@textContent</pre>
-                }
-                else
-                {
-                    <p class="empty">No text content is available for this code.</p>
-                }
-            </div>
+    <main class="detail-shell">
+        <section class="panel detail-panel" aria-labelledby="text-title">
+            <h1 id="text-title">Shared text</h1>
+            @if (textContent != null)
+            {
+                <pre id="sharedText" class="shared-text">@textContent</pre>
+                <div class="inline-actions">
+                    <button class="button primary" type="button" data-copy-target="sharedText">Copy text</button>
+                </div>
+            }
+            else if (Model != null)
+            {
+                <form method="post" action="@Url.Action("RevealText", "File")">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="code" value="@Model" />
+                    <p class="detail-intro">This snippet has a limited number of views.</p>
+                    <button class="button primary" type="submit">Reveal text</button>
+                </form>
+            }
+            else
+            {
+                <p class="message error">This text is unavailable.</p>
+            }
         </section>
     </main>
 
-    <script>
-        function copyText() {
-            const textElement = document.getElementById("textContent");
-            const button = document.getElementById("copyButton");
-
-            if (!textElement || !button) {
-                return;
-            }
-
-            navigator.clipboard.writeText(textElement.textContent || "").then(() => {
-                const original = button.textContent;
-                button.textContent = "Copied";
-                setTimeout(() => button.textContent = original, 1600);
-            }).catch(() => {
-                button.textContent = "Copy failed";
-                setTimeout(() => button.textContent = "Copy Text", 1600);
-            });
-        }
-    </script>
+    <script src="@Url.Content("~/js/share-actions.js")"></script>
 </body>
 </html>
-
-

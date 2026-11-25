@@ -1,197 +1,87 @@
-﻿@{
-    ViewData["Title"] = "Share Ready";
+@{
+    var isText = ViewBag.IsText is true;
+    var remaining = ViewBag.RemainingUses as int?;
+    var usageLabel = isText ? "view" : "download";
+    var downloadLink = ViewBag.DownloadLink as string;
+    var code = ViewBag.Code as string;
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Share Ready</title>
-    <link rel="icon" type="image/png" href="/ShareAnywhere_Logo.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #f5f8ff;
-            --surface: #ffffff;
-            --line: #d7e2f5;
-            --ink: #10213d;
-            --muted: #5f6f88;
-            --brand: #0a5fd4;
-            --brand-strong: #0848a4;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: "Plus Jakarta Sans", sans-serif;
-            color: var(--ink);
-            background:
-                radial-gradient(circle at 15% 15%, #e3eeff 0, transparent 30%),
-                radial-gradient(circle at 85% 10%, #d8f0ff 0, transparent 32%),
-                linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
-            display: grid;
-            place-items: center;
-            padding: 20px;
-        }
-
-        .card {
-            width: min(760px, 100%);
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: 20px;
-            box-shadow: 0 26px 48px rgba(16, 33, 61, 0.1);
-            padding: 28px;
-        }
-
-        .kicker {
-            color: #1e9c84;
-            font-weight: 700;
-            font-size: 0.88rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            margin: 0 0 8px;
-            font-size: 1.8rem;
-            letter-spacing: -0.02em;
-        }
-
-        .sub {
-            margin: 0 0 16px;
-            color: var(--muted);
-            line-height: 1.55;
-        }
-
-        .meta {
-            margin-bottom: 12px;
-            font-size: 0.95rem;
-        }
-
-        .meta strong {
-            color: var(--brand-strong);
-        }
-
-        .link-wrap {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 18px;
-        }
-
-        .link-box {
-            flex: 1 1 320px;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 12px;
-            background: #f8fbff;
-            color: var(--brand-strong);
-            font-size: 0.92rem;
-            font-weight: 700;
-            word-break: break-all;
-        }
-
-        .btn {
-            border: 0;
-            border-radius: 12px;
-            padding: 12px 16px;
-            font-weight: 800;
-            color: #fff;
-            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .btn:hover {
-            filter: brightness(1.06);
-        }
-
-        .qr-block {
-            padding-top: 14px;
-            border-top: 1px solid var(--line);
-            margin-bottom: 16px;
-        }
-
-        #qrcode img {
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 6px;
-            background: #fff;
-        }
-
-        .actions a {
-            color: var(--brand-strong);
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .actions a:hover {
-            text-decoration: underline;
-        }
-
-        @@media (max-width: 640px) {
-            .card {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 1.45rem;
-            }
-        }
-    </style>
+    <title>Link ready · Share Anywhere</title>
+    <link rel="icon" type="image/png" href="@Url.Content("~/ShareAnywhere_Logo.png")" />
+    <link rel="stylesheet" href="@Url.Content("~/css/site.css")" />
 </head>
 <body>
-    <section class="card">
-        <div class="kicker">Share Anywhere</div>
-        <h1>Your share link is ready</h1>
-        <p class="sub">Send this link or QR code to the receiver. Access is controlled by your configured download or view limit.</p>
-        <p class="meta">Shared item: <strong>@ViewBag.FileName</strong></p>
-
-        <div class="link-wrap">
-            <div id="codeText" class="link-box">@ViewBag.DownloadLink</div>
-            <button id="copyBtn" class="btn" type="button" onclick="copyCode()">Copy Link</button>
+    <header class="topbar">
+        <div class="shell topbar-inner">
+            <a class="brand" href="@Url.Action("Upload", "File")">
+                <img src="@Url.Content("~/ShareAnywhere_Logo.png")" width="36" height="36" alt="" />
+                Share Anywhere
+            </a>
         </div>
+    </header>
 
-        <div class="qr-block">
-            <div style="margin-bottom:8px;font-weight:700;">QR Code</div>
-            <div id="qrcode"></div>
-        </div>
+    <main class="detail-shell">
+        <section class="panel detail-panel" aria-labelledby="result-title">
+            <h1 id="result-title">@(isText ? "Text link ready" : "Link ready")</h1>
+            @if (!isText && ViewBag.FileName is string fileName)
+            {
+                <p class="detail-intro">@fileName</p>
+            }
+            @if (downloadLink != null)
+            {
+                <div class="link-card">
+                    @if (remaining.HasValue)
+                    {
+                        <span class="chip">@remaining @usageLabel@(remaining.Value == 1 ? "" : "s") left</span>
+                    }
+                    <div class="link-controls">
+                        <a id="resultUrl" class="share-url" href="@downloadLink" target="_blank" rel="noopener">@downloadLink</a>
+                        <button class="button primary" type="button" data-copy-target="resultUrl">Copy link</button>
+                    </div>
+                    <div class="link-tools">
+                        @if (code != null)
+                        {
+                            <p class="hint">Share code <strong class="share-code">@code</strong></p>
+                        }
+                        @if (ViewBag.ExpiresAt is DateTimeOffset expiresAt)
+                        {
+                            <p class="hint" id="resultExpiry" data-expires="@expiresAt.ToString("O")"></p>
+                        }
+                        <details id="resultQrDetails" class="qr-details" hidden>
+                            <summary><span class="qr-show">Show QR</span><span class="qr-hide">Hide QR</span></summary>
+                            <div id="resultQr" class="qr-code"></div>
+                        </details>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p class="message error">This link is unavailable.</p>
+            }
 
-        <div class="actions">
-            <a href="@Url.Action("Upload", "File")">Create another share</a>
-        </div>
-    </section>
+            <div class="inline-actions">
+                <a class="button secondary" href="@Url.Action("Upload", "File")">Create another share</a>
+            </div>
+        </section>
+    </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="@Url.Content("~/lib/qrcodejs/qrcode.min.js")"></script>
+    <script src="@Url.Content("~/js/share-actions.js")"></script>
     <script>
-        function copyCode() {
-            const fullUrl = document.getElementById("codeText").innerText;
-            navigator.clipboard.writeText(fullUrl).then(() => {
-                const btn = document.getElementById("copyBtn");
-                btn.innerText = "Copied";
-                setTimeout(() => btn.innerText = "Copy Link", 1800);
-            });
+        const resultUrl = document.getElementById("resultUrl");
+        if (resultUrl) {
+            resultUrl.textContent = resultUrl.href;
+            updateShareQr(document.getElementById("resultQrDetails"), document.getElementById("resultQr"), resultUrl.href);
         }
 
-        window.onload = function () {
-            const fullUrl = document.getElementById("codeText").innerText;
-            new QRCode(document.getElementById("qrcode"), {
-                text: fullUrl,
-                width: 180,
-                height: 180,
-                colorDark: "#10213d",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        };
+        const resultExpiry = document.getElementById("resultExpiry");
+        if (resultExpiry) {
+            resultExpiry.textContent = "Expires at " + formatShareExpiry(resultExpiry.dataset.expires);
+        }
     </script>
 </body>
 </html>
-
-
